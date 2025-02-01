@@ -148,12 +148,6 @@ exports.getOrderById = async (req, res, next) => {
 // Update order status
 exports.updateOrderStatus = async (req, res, next) => {
     try {
-        if (!req.user) {
-            return next(new errorHandler(401, "Unauthorized: No user logged in"));
-        }
-        if (req.user.role !== "admin" && !req.user.permissions.includes("manage_orders")) {
-            return next(new errorHandler(403, "Access Denied: You don't have permission to manage orders"));
-        }
         const orderId = req.params.orderId;
         const { status } = req.body;
         const order = await Order.findByIdAndUpdate(orderId, { status }, { new: true });

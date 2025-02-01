@@ -27,6 +27,7 @@ process.on("uncaughtException", (err) => {
 const userRoute = require('./routes/userRoute');
 const menuRoute = require('./routes/menuRoutes');
 const orderRoute = require('./routes/orderRoute');
+const inventoryRoute = require('./routes/inventoryRoute');
 
 
 // Middleware to parse JSON requests
@@ -35,6 +36,7 @@ app.use(express.json());
 app.use("/api/v1", userRoute);
 app.use("/api/v1", menuRoute);
 app.use("/api/v1", orderRoute);
+app.use("/api/v1", inventoryRoute);
 
 
 //Global Error handling middleware

@@ -5,17 +5,6 @@ const ErrorHandler = require("../utils/errorHandler");
 exports.createMenuItem = async (req, res, next) => {
     try {
         const { name, description, price, imageUrl, stock, category, type } = req.body;
-
-        // Check if user is authenticated
-        if (!req.user) {
-            return next(new errorHandler(401, "Unauthorized: No user logged in"));
-        }
-
-        // Check if user is an admin or has the 'manage_menu' permission
-        if (req.user.role !== "admin" && !req.user.permissions.includes("manage_menu")) {
-            return next(new errorHandler(403, "Access Denied: You don't have permission to create menu items"));
-        }
-
         // Validate required fields
         if (!name || !description || !category || !type || !price || !imageUrl || imageUrl.length === 0) {
             return next(new errorHandler(400, "All required fields must be provided"));
@@ -46,14 +35,6 @@ exports.createMenuItem = async (req, res, next) => {
 // Edit a menu item (Admins or Users with 'manage_menu' permission)
 exports.editMenuItem = async (req, res, next) => {
     try {
-        if (!req.user) {
-            return next(new ErrorHandler(401, "Unauthorized: No user logged in"));
-        }
-
-        if (req.user.role !== "admin" && !req.user.permissions.includes("manage_menu")) {
-            return next(new ErrorHandler(403, "Access Denied: You don't have permission to edit menu items"));
-        }
-
         const updates = req.body;
         const { id } = req.params;
 
@@ -84,12 +65,6 @@ exports.editMenuItem = async (req, res, next) => {
 //delete the menu item
 exports.deleteMenuItem = async (req, res, next) => {
     try {
-        if (!req.user) {
-            return next(new ErrorHandler(401, "Unauthorized: No user logged in"));
-        }
-        if (req.user.role !== "admin" && !req.user.permissions.includes("manage_menu")) {
-            return next(new ErrorHandler(403, "Access Denied: You don't have permission to delete menu items"));
-        }
         const { id } = req.params;
         const menuItem = await MenuItem.findByIdAndDelete(id);
         if (!menuItem) {
