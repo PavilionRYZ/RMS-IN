@@ -28,6 +28,8 @@ const userRoute = require('./routes/userRoute');
 const menuRoute = require('./routes/menuRoutes');
 const orderRoute = require('./routes/orderRoute');
 const inventoryRoute = require('./routes/inventoryRoute');
+const analysisRoute = require('./routes/analysisRoute');
+const paymentRoute = require('./routes/paymentRoute');
 
 
 // Middleware to parse JSON requests
@@ -37,6 +39,8 @@ app.use("/api/v1", userRoute);
 app.use("/api/v1", menuRoute);
 app.use("/api/v1", orderRoute);
 app.use("/api/v1", inventoryRoute);
+app.use("/api/v1", analysisRoute);
+app.use("/api/v1", paymentRoute);
 
 
 //Global Error handling middleware
