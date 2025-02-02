@@ -3,6 +3,7 @@ const Order = require("../models/order"); // Import Order model
 const Payment = require("../models/payments"); // Import Payment model
 const errorHandler = require("../utils/errorHandler");
 
+// Create a new payment
 exports.createPayment = async (req, res, next) => {
     try {
         let { orderId, payment_method, transaction_id } = req.body;
@@ -13,7 +14,7 @@ exports.createPayment = async (req, res, next) => {
         }
 
         // Trim and validate orderId
-        orderId = orderId.toString().trim(); // Ensure it's a string before trimming
+        orderId = orderId.toString().trim();
         if (!mongoose.Types.ObjectId.isValid(orderId)) {
             return next(new errorHandler(400, "Invalid Order ID format"));
         }
@@ -24,21 +25,37 @@ exports.createPayment = async (req, res, next) => {
             return next(new errorHandler(400, "Order not found"));
         }
 
+        if (order.status !== "completed") {
+            return next(new errorHandler(400, `Order is not completed order is still in ${order.status} state`));
+        }
+
+        if (order.payment != null) {
+            return next(new errorHandler(400, "Order is already paid"));
+        }
+
         // Fetch amount from the order's total price
         const amount = order.total_price;
+        const order_type = order.order_type;
 
         // Create payment record
         const payment = new Payment({
             order: orderId,
-            amount, // Directly fetched from Order
+            order_type: order_type,
+            amount,
             payment_method,
             transaction_id: transaction_id || null,
-            payment_status: payment_method === "cash" ? "completed" : "pending", // Cash payments complete instantly
+            payment_status: payment_method === "cash" ? "completed" : "pending",
         });
 
+        // Save payment
         await payment.save();
 
-        res.status(201).json({ success: true, message: "Payment created successfully", payment });
+        if (payment.payment_status === "complete") {
+            // Link payment to the order and update order status
+            order.payment = payment._id;
+            await order.save();
+        }
+        res.status(201).json({ success: true, message: "Payment created and linked to order successfully", payment });
     } catch (error) {
         console.error("Error creating payment:", error);
         next(new errorHandler(500, "Failed to create payment"));
@@ -46,19 +63,41 @@ exports.createPayment = async (req, res, next) => {
 };
 
 // Update payment status (e.g., after online payment confirmation)
-exports.updatePaymentStatus = async (req, res) => {
+exports.updatePaymentStatus = async (req, res, next) => {
     try {
         const { paymentId } = req.params;
         const { payment_status } = req.body;
 
+        //validate paymentid
+        if (!mongoose.Types.ObjectId.isValid(paymentId)) {
+            return next(new errorHandler(400, "Invalid Payment ID format"));
+        }
+        // Find payment by ID
         const payment = await Payment.findById(paymentId);
         if (!payment) {
             return next(new errorHandler(400, "Payment not found"));
         }
 
+        // Find related order
+        const order = await Order.findById(payment.order);
+        if (!order) {
+            return next(new errorHandler(400, "Associated order not found"));
+        }
+
+        // If payment is already set for the order, prevent re-assignment
+        if (order.payment && order.payment.toString() !== paymentId) {
+            return next(new errorHandler(400, "Order is already paid"));
+        }
+
         // Update payment status
         payment.payment_status = payment_status;
         await payment.save();
+
+        // If payment is completed, update the order
+        if (payment_status === "completed") {
+            order.payment = payment._id; // Assign payment to the order
+            await order.save();
+        }
 
         res.status(200).json({ success: true, message: "Payment status updated", payment });
     } catch (error) {
@@ -68,9 +107,13 @@ exports.updatePaymentStatus = async (req, res) => {
 };
 
 // Get payments for a specific order
-exports.getPaymentsByOrder = async (req, res) => {
+exports.getPaymentsByOrder = async (req, res, next) => {
     try {
-        const { orderId } = req.params;
+        let { orderId } = req.params;
+        orderId = orderId.toString().trim();
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            return next(new errorHandler(400, "Invalid Order ID format"));
+        }
         const payments = await Payment.find({ order: orderId });
 
         if (!payments.length) {
@@ -89,7 +132,10 @@ exports.getPaymentsByOrder = async (req, res) => {
 exports.refundPayment = async (req, res) => {
     try {
         const { paymentId } = req.params;
-
+        // validate paymentid
+        if (!mongoose.Types.ObjectId.isValid(paymentId)) {
+            return next(new errorHandler(400, "Invalid Payment ID format"));
+        }
         const payment = await Payment.findById(paymentId);
         if (!payment) {
             return next(new errorHandler(400, "Payment not found"));

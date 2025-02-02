@@ -7,6 +7,11 @@ const paymentSchema = new mongoose.Schema(
             ref: "Order",
             required: true,
         },
+        order_type: { 
+            type: String,
+            enum: ["dine-in", "takeaway", "online"],
+            required: true,
+        },
         amount: {
             type: Number,
             required: true,
