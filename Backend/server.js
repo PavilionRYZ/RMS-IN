@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const connectDB = require("./config/database");
+// require("./controllers/cronJobs");
 
 // Load environment variables
 dotenv.config({ path: "./config/.env" });
