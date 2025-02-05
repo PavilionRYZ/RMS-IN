@@ -28,7 +28,7 @@ const Header = () => {
           className="text-3xl cursor-pointer"
           onClick={() => setIsOpen(true)}
         />
-        <h1 className="text-2xl font-bold">Ariyas</h1>
+        <h1 className="text-2xl font-bold">RMS-IN</h1>
       </div>
       <motion.div
         initial="closed"
