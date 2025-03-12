@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const connectDB = require("./config/database");
+const cors = require('cors');
 // require("./controllers/cronJobs");
 
 // Load environment variables
@@ -13,6 +14,8 @@ connectDB();
 // Initialize Express app
 const app = express();
 app.use(cookieParser());
+app.use(cors());
+app.use(express.json());
 
 
 //<------- uncaught ref err ------->
@@ -29,7 +32,7 @@ const userRoute = require('./routes/userRoute');
 const menuRoute = require('./routes/menuRoutes');
 const orderRoute = require('./routes/orderRoute');
 const inventoryRoute = require('./routes/inventoryRoute');
-const analysisRoute = require('./routes/analysisRoute');
+// const analysisRoute = require('./routes/analysisRoute');
 const paymentRoute = require('./routes/paymentRoute');
 
 
@@ -40,7 +43,7 @@ app.use("/api/v1", userRoute);
 app.use("/api/v1", menuRoute);
 app.use("/api/v1", orderRoute);
 app.use("/api/v1", inventoryRoute);
-app.use("/api/v1", analysisRoute);
+// app.use("/api/v1", analysisRoute);
 app.use("/api/v1", paymentRoute);
 
 
