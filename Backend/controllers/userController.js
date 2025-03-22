@@ -3,6 +3,22 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const errorHandler = require("../utils/errorHandler");
 
+
+// Helper function to create a token and send response
+const sendResponseWithToken = (user, res) => {
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  const { password: pass, ...rest } = user._doc; // Exclude password from the response
+
+  res.cookie("token", token, {
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  }).status(200).json({
+    success: true,
+    message: "User logged in successfully",
+    user: rest
+  });
+};
+
 // Create a new user (Admin Only)
 exports.createUser = async (req, res, next) => {
   try {
@@ -97,25 +113,8 @@ exports.loginUser = async (req, res, next) => {
       return next(new errorHandler(400, "Invalid email or password"));
     }
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    // Set the token in a cookie
-    res.cookie("token", token, {
-      httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
-      secure: process.env.NODE_ENV === "production", // Use HTTPS in production
-      maxAge: 3600000, // 1 hour in milliseconds
-    });
-
     // Send response
-    res.status(200).json({
-      message: "Logged in successfully",
-      token, // Optional: Send token in response body if needed
-    });
+    sendResponseWithToken(user, res);
   } catch (error) {
     console.error(error);
     next(new errorHandler(500, "User Login Failed"));
@@ -125,15 +124,32 @@ exports.loginUser = async (req, res, next) => {
 //logout user
 exports.logoutUser = async (req, res, next) => {
   try {
+    req.user = null;
+
     res.clearCookie("token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Only over HTTPS in production
-      sameSite: "Strict", // Prevent CSRF attacks
+      sameSite: "Strict",
+      secure: process.env.NODE_ENV === "production"
     });
-    res.status(200).json({ message: "User logged out successfully" });
+
+    if (req.session) {
+      return req.session.destroy((err) => {
+        if (err) return next(new errorHandler(500, "Error destroying session"));
+
+        res.status(200).json({
+          success: true,
+          message: "Sign out successful"
+        });
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Sign out successful"
+    });
+
   } catch (error) {
-    console.error(error);
-    next(new errorHandler(500, "User Logout Failed"));
+    next(new errorHandler(500, "Error while signing out user"));
   }
 };
 
