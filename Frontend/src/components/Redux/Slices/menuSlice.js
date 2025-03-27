@@ -71,6 +71,9 @@ const menuSlice = createSlice({
         resetMenu: (state, action) => {
             state.menu = action.payload;
         },
+        resetMenuItem: (state) => {
+            state.menuItem = null; // Add a reducer to reset menuItem
+          },
     },
     extraReducers: (builder) => {
         builder
@@ -139,6 +142,6 @@ const menuSlice = createSlice({
 
 });
 
-export const { resetMenu } = menuSlice.actions;
+export const { resetMenu, resetMenuItem } = menuSlice.actions;
 
 export default menuSlice.reducer;

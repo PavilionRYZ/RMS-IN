@@ -23,6 +23,7 @@ import Reports from './components/Pages/Reports';
 import Analytics from './components/Pages/Analytics';
 import Messages from './components/Pages/Messages';
 import Cart from "./components/Pages/Cart";
+import ItemDetails from "./components/Pages/ItemDetails";
 
 const App = () => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
@@ -66,6 +67,7 @@ const App = () => {
               <Route path="/analytics" element={<ProtectedRoute permissions={['analytics_management']}><Analytics isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/messages" element={<ProtectedRoute permissions={['manage_messages']}><Messages isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/cart" element={<Cart />} />
+              <Route path="/item-details/:id" element={<ItemDetails isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />} />
               <Route path="/not-authorized" element={<NotAuthorized />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

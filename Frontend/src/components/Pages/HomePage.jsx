@@ -22,11 +22,9 @@ const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
     dispatch(getMenuItems());
   }, [dispatch]);
 
-  // Updated categories to match backend schema
   const categories = ["All", "veg", "non-veg", "beverages", "mocktails", "cocktails"];
   const types = ["All", "Indian", "Chinese", "Italian", "Continental"];
 
-  // Filter menu items
   const filteredMenu = menu
     .filter((item) => {
       const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -50,7 +48,11 @@ const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
   };
 
   const handleItemClick = (itemId) => {
-    navigate(`/menu/${itemId}`);
+    if (itemId) {
+      navigate(`/item-details/${itemId}`);
+    } else {
+      console.error("Item ID is undefined, cannot navigate to ItemDetails");
+    }
   };
 
   const totalCartItems = cartItems.reduce((total, item) => total + item.quantity, 0);
@@ -171,7 +173,11 @@ const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
                   <p className="text-gray-600 mt-2">Loading menu items...</p>
                 </div>
               ) : error ? (
-                <p className="text-center text-red-500 text-lg">{error}</p>
+                <div className="text-center">
+                  <p className="text-red-500 text-lg">
+                    {error.message || "Failed to load menu items. Please try again."}
+                  </p>
+                </div>
               ) : Object.keys(filteredMenu).length === 0 ? (
                 <p className="text-center text-gray-600 text-lg">No menu items available.</p>
               ) : (
@@ -184,7 +190,7 @@ const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
                       {filteredMenu[category].map((item) => {
                         const cartItem = cartItems.find((ci) => ci.menu_item === item._id);
                         const quantity = cartItem ? cartItem.quantity : 0;
-                        const isOutOfStock = !item.isFreshlyMade && item.stock <= 0; // Only stocked items can be out of stock
+                        const isOutOfStock = !item.isFreshlyMade && item.stock <= 0;
 
                         return (
                           <div
@@ -214,11 +220,6 @@ const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
                                   <span className="text-white text-lg font-semibold">Out of Stock</span>
                                 </div>
                               )}
-                              {/* {item.isFreshlyMade && (
-                                <span className="absolute top-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
-                                  Freshly Made
-                                </span>
-                              )} */}
                             </div>
                             <h3
                               className="text-lg sm:text-xl font-semibold text-gray-800 mb-2 cursor-pointer hover:text-amber-600 transition-colors duration-200"
