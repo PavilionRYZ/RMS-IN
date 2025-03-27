@@ -29,12 +29,14 @@ exports.verifyAdmin = async (req, res, next) => {
 exports.verifyToken = async (req, res, next) => {
     try {
         const token = req.cookies.token || req.header("Authorization")?.split(" ")[1];
+       // console.log("token:", token);
         if (!token) {
             return res.status(401).json({ message: "No token provided, authorization denied" });
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = await User.findById(decoded.userId); // Assuming userId is in the decoded token
+       // console.log("Decoded token:",decoded);
+        req.user = await User.findById(decoded.id); // Assuming userId is in the decoded token
         if (!req.user) {
             return res.status(401).json({ message: "User not found" });
         }

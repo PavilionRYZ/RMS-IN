@@ -9,6 +9,6 @@ router.route("/updateUser/:userId").patch(verifyAdmin, updateUser);
 router.route("/getAllUsers").get(verifyAdmin, getAllUsers);
 router.route("/login").post(loginUser);
 router.route("/logout").post(logoutUser);
-router.route("/updateUserCredentials/:userId").patch(verifyToken, updateUserCredentials);
+router.route("/updateUserCredentials").patch(verifyToken, updateUserCredentials);
 
 module.exports = router;

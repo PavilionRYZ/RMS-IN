@@ -1,7 +1,6 @@
 const Order = require("../models/order");
 const MenuItem = require("../models/menu");
 const errorHandler = require("../utils/errorHandler");
-
 // Place an order and update stock
 exports.placeOrder = async (req, res, next) => {
     try {
@@ -150,18 +149,44 @@ exports.updateOrderStatus = async (req, res, next) => {
     try {
         const orderId = req.params.orderId;
         const { status } = req.body;
-        const order = await Order.findByIdAndUpdate(orderId, { status }, { new: true });
+
+        // Fetch the order first to check its current status
+        const order = await Order.findById(orderId);
         if (!order) {
             return next(new errorHandler(404, `Order not found: ${orderId}`));
         }
-        res.json(order);
+
+        // Prevent status change if the order is already completed
+        if (order.status === "completed") {
+            return next(new errorHandler(400, "Cannot modify status of a completed order"));
+        }
+
+        // Update the order status
+        const updatedOrder = await Order.findByIdAndUpdate(
+            orderId,
+            { status },
+            { new: true }
+        );
+
+        // If the new status is "completed", update stock (moved logic here)
+        if (status === "completed") {
+            for (const item of updatedOrder.items) {
+                const menuItem = await MenuItem.findById(item.menu_item);
+                if (menuItem) {
+                    menuItem.stock -= item.quantity;
+                    await menuItem.save();
+                }
+            }
+        }
+
+        res.json(updatedOrder);
     } catch (error) {
         console.error("Error updating order status:", error);
         next(new errorHandler(500, "Failed to update order status"));
     }
-}
+};
 
-//Add items to an existing order bofore the order status is completed or being cancelled
+
 exports.addToOrder = async (req, res, next) => {
     try {
         const { orderId } = req.params; // Get order ID from URL
@@ -202,11 +227,21 @@ exports.addToOrder = async (req, res, next) => {
             menuItem.stock -= orderItem.quantity;
             await menuItem.save();
 
-            // Add new items to order
-            updatedItems.push({
-                menu_item: menuItem._id,
-                quantity: orderItem.quantity,
-            });
+            // Check if item already exists in the order
+            const existingItemIndex = updatedItems.findIndex(item =>
+                item.menu_item.toString() === orderItem.menu_item.toString()
+            );
+
+            if (existingItemIndex !== -1) {
+                // If item exists, increase quantity
+                updatedItems[existingItemIndex].quantity += orderItem.quantity;
+            } else {
+                // If item does not exist, add new item
+                updatedItems.push({
+                    menu_item: menuItem._id,
+                    quantity: orderItem.quantity,
+                });
+            }
 
             // Update total price
             total_price += menuItem.price * orderItem.quantity;

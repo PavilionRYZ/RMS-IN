@@ -4,10 +4,18 @@ const ErrorHandler = require("../utils/errorHandler");
 // Create a menu item (Admins or Users with 'manage_menu' permission)
 exports.createMenuItem = async (req, res, next) => {
     try {
-        const { name, description, price, imageUrl, stock, category, type } = req.body;
+        const { name, description, price, imageUrl, stock, category, type, isFreshlyMade } = req.body;
+
         // Validate required fields
         if (!name || !description || !category || !type || !price || !imageUrl || imageUrl.length === 0) {
-            return next(new errorHandler(400, "All required fields must be provided"));
+            return next(new ErrorHandler(400, "All required fields must be provided"));
+        }
+
+        // If item is not freshly made and stock is not provided, it will default to 0
+        // If item is freshly made, stock should be null or omitted
+        if (!isFreshlyMade && stock === undefined) {
+            // This is optional: you could enforce stock being provided for non-fresh items
+            // return next(new errorHandler(400, "Stock is required for non-freshly made items"));
         }
 
         // Create new menu item
@@ -18,7 +26,8 @@ exports.createMenuItem = async (req, res, next) => {
             type,
             price,
             imageUrl,
-            stock: stock || 0, // Default stock is 0
+            isFreshlyMade: isFreshlyMade || false, // Default to false if not provided
+            stock: isFreshlyMade ? null : (stock || 0), // Null for fresh items, otherwise stock or 0
         });
 
         res.status(201).json({
@@ -28,10 +37,9 @@ exports.createMenuItem = async (req, res, next) => {
         });
     } catch (error) {
         console.error("Error creating menu item:", error);
-        next(new errorHandler(500, "Menu item creation failed"));
+        next(new ErrorHandler(500, "Menu item creation failed"));
     }
 };
-
 // Edit a menu item (Admins or Users with 'manage_menu' permission)
 exports.editMenuItem = async (req, res, next) => {
     try {

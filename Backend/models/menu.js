@@ -13,11 +13,11 @@ const menuItemSchema = new mongoose.Schema(
         },
         category: {
             type: String,
-            required: [true, "Please give a category"],
+            required: [true, "Please give a category"], //{e.g:veg,non-veg,beverages,mocktails,cocktails}
         },
         type: {
             type: String,
-            required: [true, "Please give a type"],
+            required: [true, "Please give a type"], // {e.g:Indian,Chinese,Italian,Continental,etc.}
         },
         price: {
             type: Number,
@@ -27,9 +27,18 @@ const menuItemSchema = new mongoose.Schema(
             type: Array, // URL for the image
             required: [true, "Please give an image"],
         },
+        isFreshlyMade: {
+            type: Boolean,
+            default: false, // Default to false, meaning stock tracking applies unless specified
+        },
         stock: {
             type: Number,
-            default: 0,
+            default: function() {
+                return this.isFreshlyMade ? null : 0; // Set to null for freshly made items, 0 otherwise
+            },
+            required: function() {
+                return !this.isFreshlyMade; // Stock is required only if item is not freshly made
+            }
         },
     },
     { timestamps: true }
