@@ -21,17 +21,19 @@ exports.placeOrder = async (req, res, next) => {
                 return next(new errorHandler(404, `Item not found: ${orderItem.menu_item}`));
             }
 
-            // Check stock availability
-            if (menuItem.stock < orderItem.quantity) {
-                return next(new errorHandler(400, `Not enough stock for ${menuItem.name}`));
+            // Check stock availability only for non-freshly made items
+            if (!menuItem.isFreshlyMade) {
+                if (menuItem.stock === null || menuItem.stock < orderItem.quantity) {
+                    return next(new errorHandler(400, `Not enough stock for ${menuItem.name}`));
+                }
+
+                // Deduct stock only for non-freshly made items
+                menuItem.stock -= orderItem.quantity;
+                await menuItem.save(); // Update stock in the database
             }
 
             // Calculate total price
             total_price += menuItem.price * orderItem.quantity;
-
-            // Deduct stock
-            menuItem.stock -= orderItem.quantity;
-            await menuItem.save(); // Update stock in the database
 
             updatedItems.push({
                 menu_item: menuItem._id,

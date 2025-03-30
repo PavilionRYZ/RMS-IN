@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import Sidebar from "../Layout/Sidebar";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import PropTypes from 'prop-types';
 
 const StaffDashboard = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const dispatch = useDispatch();
@@ -110,6 +111,10 @@ const StaffDashboard = ({ isSidebarOpen, setIsSidebarOpen }) => {
       </div>
     </Fragment>
   );
+};
+StaffDashboard.propTypes = {
+  isSidebarOpen: PropTypes.bool.isRequired,
+  setIsSidebarOpen: PropTypes.func.isRequired,
 };
 
 export default StaffDashboard;

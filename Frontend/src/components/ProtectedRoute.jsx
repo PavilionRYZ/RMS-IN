@@ -1,12 +1,18 @@
 import { useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 
 const ProtectedRoute = ({ children, roles, permissions }) => {
-  const { user } = useSelector((state) => state.auth);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   // Check if user is authenticated
-  if (!user) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Admins have full access
+  if (user.role === 'admin') {
+    return children;
   }
 
   // Check role-based access
@@ -14,11 +20,10 @@ const ProtectedRoute = ({ children, roles, permissions }) => {
 
   // Check permission-based access
   const hasPermission = permissions
-    ? Array.isArray(user.permissions) && permissions.every((perm) => user.permissions.includes(perm))
+    ? Array.isArray(user.permissions) && permissions.some((perm) => user.permissions.includes(perm))
     : true;
 
-  // If user lacks required role AND permissions, redirect to a "Not Authorized" page
-  // Backend allows access if user is admin OR has the required permission, so we mirror that logic
+  // Backend allows access if user has the required role OR any of the required permissions
   const isAuthorized = hasRole || hasPermission;
 
   if (!isAuthorized) {
@@ -27,6 +32,11 @@ const ProtectedRoute = ({ children, roles, permissions }) => {
 
   // If all checks pass, render the protected component
   return children;
+};
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  roles: PropTypes.arrayOf(PropTypes.string),
+  permissions: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default ProtectedRoute;

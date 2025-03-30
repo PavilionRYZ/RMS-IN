@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { login } from '../Redux/Slices/authSlice';
@@ -11,7 +12,7 @@ const LoginPage = () => {
   const [errors, setErrors] = useState({ email: '', password: '' });
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading } = useSelector((state) => state.auth);
+  const { loading,user } = useSelector((state) => state.auth);
 
   // Toast options
   const toastOptions = {
@@ -60,8 +61,9 @@ const LoginPage = () => {
 
     try {
       const result = await dispatch(login({ email, password })).unwrap();
-      console.log("Login result:", result);
+      //console.log("Login result:", result);
       toast.success('Logged in successfully!', toastOptions);
+      navigate('/');
       // Redirection is now handled in App.jsx
     } catch (err) {
       console.error("Login error:", err);
@@ -139,10 +141,10 @@ const LoginPage = () => {
         </form>
 
         {/* Link to Home Page */}
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Back to{' '}
-          <a href="/" className="text-blue-500 hover:underline">
-            Home
+        <p className="mt-4 text-center text-md text-gray-600">
+          forgot password ?{' '}
+          <a href="/forgot-password" className="text-blue-500 hover:underline">
+           Reset Password
           </a>
         </p>
       </div>

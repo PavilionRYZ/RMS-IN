@@ -8,7 +8,8 @@ import {
 } from "../Redux/Slices/orderSlice";
 import { Table, Button, Select, Input, DatePicker, Pagination } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import moment from "moment";
 import PropTypes from "prop-types";
 
@@ -122,15 +123,6 @@ const ManageOrders = ({ isSidebarOpen, setIsSidebarOpen }) => {
       render: (date) => moment(date).format("YYYY-MM-DD HH:mm"),
       sorter: true,
     },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Button onClick={() => handleViewDetails(record._id)}>
-          View Details
-        </Button>
-      ),
-    },
   ];
 
   const handleStatusChange = (orderId, status) => {
@@ -163,16 +155,71 @@ const ManageOrders = ({ isSidebarOpen, setIsSidebarOpen }) => {
     setPagination({ page, limit: pageSize });
   };
 
-  const handleViewDetails = (orderId) => {
-    console.log(`View details for order: ${orderId}`);
-  };
-
   const handleRefresh = () => {
     fetchOrders();
     toast.info("Orders refreshed", {
       position: "top-right",
       autoClose: 3000,
     });
+  };
+
+  // Define the expanded row render function
+  const expandedRowRender = (record) => {
+    const columns = [
+      {
+        title: "Item Name",
+        dataIndex: ["menu_item", "name"],
+        key: "name",
+      },
+      {
+        title: "Quantity",
+        dataIndex: "quantity",
+        key: "quantity",
+      },
+      {
+        title: "Special Instructions",
+        dataIndex: "specialInstructions",
+        key: "specialInstructions",
+        render: (text) => text || "None",
+      },
+    ];
+
+    return (
+      <div className="p-4 bg-gray-200 rounded-lg">
+        <h3 className="text-lg font-semibold text-black mb-2">Order Details</h3>
+        <div className="mb-4">
+          <p className="text-gray-600">
+            <span className="font-semibold">Order Type:</span>{" "}
+            {record.order_type.toUpperCase()}
+          </p>
+          <p className="text-gray-600">
+            <span className="font-semibold">Table No:</span>{" "}
+            {record.table_no}
+          </p>
+          <p className="text-gray-600">
+            <span className="font-semibold">Order Status:</span>{" "}
+            <span
+              className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                record.status === "completed"
+                  ? "bg-green-100 text-green-800"
+                  : record.status === "processing"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-red-100 text-red-800"
+              }`}
+            >
+              {record.status}
+            </span>
+          </p>
+        </div>
+        <Table
+          columns={columns}
+          dataSource={record.items}
+          pagination={false}
+          rowKey={(item) => item.menu_item._id}
+          bordered
+        />
+      </div>
+    );
   };
 
   return (
@@ -229,6 +276,10 @@ const ManageOrders = ({ isSidebarOpen, setIsSidebarOpen }) => {
             loading={loading}
             onChange={handleTableChange}
             pagination={false}
+            expandable={{
+              expandedRowRender,
+              rowExpandable: (record) => record.items && record.items.length > 0,
+            }}
           />
           <div className="mt-4 flex justify-end">
             <Pagination
@@ -247,6 +298,7 @@ const ManageOrders = ({ isSidebarOpen, setIsSidebarOpen }) => {
           )}
         </div>
       </div>
+      <ToastContainer autoClose={3000} />
     </Fragment>
   );
 };

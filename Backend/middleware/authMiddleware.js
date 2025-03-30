@@ -13,10 +13,10 @@ exports.verifyAdmin = async (req, res, next) => {
 
         // Verify the token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = await User.findById(decoded.userId);
+        req.user = await User.findById(decoded.id);
 
         if (!req.user || req.user.role !== "admin") {
-            return res.status(403).json({ message: "Access denied: Admins only" });
+            return res.status(403).json({ message: "Access denied: Admins only(-_-)" });
         }
 
         next(); // Proceed to the next middleware or controller

@@ -121,9 +121,9 @@ const ItemDetails = ({ isSidebarOpen, setIsSidebarOpen }) => {
   }
 
   // Debug the menuItem object and sidebar state
-  console.log("Menu item in component:", menuItem);
-  console.log("stock", menuItem.stock);
-  console.log("Sidebar state:", isSidebarOpen);
+  // console.log("Menu item in component:", menuItem);
+  // console.log("stock", menuItem.stock);
+  // console.log("Sidebar state:", isSidebarOpen);
 
   return (
     <Fragment>

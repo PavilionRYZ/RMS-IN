@@ -4,8 +4,10 @@ import { MdOutlineMenuBook } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { logout } from "../Redux/Slices/authSlice";
+import {resetUserState} from "../Redux/Slices/userSlice";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { clearOrderState } from "../Redux/Slices/orderSlice";
 
 const navLinks = [
   { to: "/", label: "Home", icon: FaHome, permission: null },
@@ -13,10 +15,10 @@ const navLinks = [
   { to: "/manage-orders", label: "Manage Order", icon: FaShoppingCart, permission: "manage_orders" },
   { to: "/manage-inventory", label: "Manage Inventory", icon: FaBox, permission: "inventory_management" },
   { to: "/manage-menu", label: "Manage Menu", icon: MdOutlineMenuBook, permission: "manage_menu" },
-  { to: "/manage-staff", label: "Manage Staff", icon: FaUsers, permission: "manage_staff" },
+  { to: "/manage-staff", label: "Manage Staff", icon: FaUsers, permission: "manage_staff",role:"admin" },
   { to: "/manage-customers", label: "Manage Customers", icon: FaUsers, permission: "manage_customers" },
   { to: "/reservations", label: "Reservation", icon: FaCalendarAlt, permission: "manage_reservations" },
-  { to: "/purchase-manage", label: "Purchase Manage", icon: FaBox, permission: "purchase_management" },
+  { to: "/payment-manage", label: "Payment Manage", icon: FaBox, permission: "manage_payments" },
   { to: "/production", label: "Production", icon: FaCogs, permission: "production_management" },
   { to: "/reports", label: "Report", icon: FaChartBar, permission: "view_reports" },
   { to: "/analytics", label: "Analytics", icon: FaChartBar, permission: "analytics_management" },
@@ -24,9 +26,9 @@ const navLinks = [
 ];
 
 const roleAccess = {
-  admin: ["dashboard_access", "manage_orders", "manage_reservations", "purchase_management", "production_management", "view_reports", "analytics_management", "manage_messages"],
+  admin: ["dashboard_access", "manage_orders", "manage_reservations", "manage_payments", "production_management", "view_reports", "analytics_management", "manage_messages"],
   kitchen_staff: [],
-  staff: ["manage_orders", "manage_reservations"],
+  staff: [],
   customer: ["manage_reservations", "manage_messages"],
 };
 
@@ -59,6 +61,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     try {
       await dispatch(logout()).unwrap();
       toast.success("Logged out successfully!", toastOptions);
+      dispatch(resetUserState());
+      dispatch(clearOrderState());
     } catch (error) {
       toast.error(error || "Logout failed. Please try again.", toastOptions);
       console.error("Logout failed:", error);

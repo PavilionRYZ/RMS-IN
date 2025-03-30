@@ -54,23 +54,22 @@ export const registerUser = createAsyncThunk(
     }
 );
 
-// // Update User Credentials (Logged-in User)
-// export const updateUserCredentials = createAsyncThunk(
-//     "user/updateUserCredentials",
-//     async (updateData, { rejectWithValue }) => {
-//         try {
-//             const token = Cookies.get("token");
-//             const response = await axios.patch(
-//                 `${API_URL}/updateUserCredentials`,
-//                 updateData,
-//                 { headers: { Authorization: `Bearer ${token}` } }
-//             );
-//             return response.data.user;
-//         } catch (error) {
-//             return rejectWithValue(error.response?.data?.message || "Failed to update credentials");
-//         }
-//     }
-// );
+// Delete User (Admin Only)
+export const deleteUser = createAsyncThunk(
+    "user/deleteUser",
+    async (userId, { rejectWithValue }) => {
+        try {
+            const token = Cookies.get("token");
+            const response = await axios.delete(`${API_URL}/deleteUser/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            return response.data; // Return the deleted user's ID
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to delete user");
+        }
+    }
+);
+
 
 const userSlice = createSlice({
     name: "user",
@@ -87,11 +86,6 @@ const userSlice = createSlice({
             state.loading = false;
             state.error = null;
         },
-        // setUser: (state, action) => { // Added: Reducer to set the logged-in user
-        //     state.user = action.payload;
-        //     state.loading = false;
-        //     state.error = null;
-        // },
     },
     extraReducers: (builder) => {
         builder
@@ -119,18 +113,6 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
-            // .addCase(updateUserCredentials.pending, (state) => {
-            //     state.loading = true;
-            //     state.error = null;
-            // })
-            // .addCase(updateUserCredentials.fulfilled, (state, action) => {
-            //     state.loading = false;
-            //     state.user = action.payload; // Update the logged-in user's details
-            // })
-            // .addCase(updateUserCredentials.rejected, (state, action) => {
-            //     state.loading = false;
-            //     state.error = action.payload;
-            // })
             .addCase(updateUser.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -148,9 +130,21 @@ const userSlice = createSlice({
             .addCase(updateUser.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
+            })
+            .addCase(deleteUser.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(deleteUser.fulfilled, (state, action) => {
+                state.loading = false;
+                state.users = state.users.filter((user) => user._id !== action.payload);
+            })
+            .addCase(deleteUser.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
             });
     },
 });
 
-export const { resetUserState, setUser } = userSlice.actions;
+export const { resetUserState } = userSlice.actions;
 export default userSlice.reducer;

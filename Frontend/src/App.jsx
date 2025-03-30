@@ -1,6 +1,6 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import LoginPage from './components/Auth/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './components/Pages/AdminDashboard';
@@ -17,32 +17,19 @@ import ManageInventory from './components/Pages/ManageInventory';
 import ManageStaff from './components/Pages/ManageStaff';
 import ManageCustomers from './components/Pages/ManageCustomers';
 import Reservations from './components/Pages/Reservations';
-import PurchaseManage from './components/Pages/PurchaseManage';
-import Production from './components/Pages/Production';
+import ManagePayments from './components/Pages/ManagePayments';
 import Reports from './components/Pages/Reports';
 import Analytics from './components/Pages/Analytics';
-import Messages from './components/Pages/Messages';
+import ViewOrderDetails from './components/Pages/ViewOrderDetails';
 import Cart from "./components/Pages/Cart";
 import ItemDetails from "./components/Pages/ItemDetails";
-
+import OrderItemDetails from "./components/Pages/OrderItemsDetails";
+import ForgotPassword from './components/Pages/ForgotPassword';
+import VerifyOTP from './components/Pages/VerifyOTP';
+import ResetPassword from './components/Pages/ResetPassword';
 const App = () => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
-  const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
-
-  useEffect(() => {
-    console.log(`Route changed to: ${location.pathname}`);
-  }, [location.pathname]);
-
-  const getRedirectRoute = () => {
-    if (!user || !isAuthenticated) return null;
-    const role = user.role;
-    if (role === 'admin') return '/admin';
-    if (['staff', 'kitchen_staff'].includes(role)) return '/staff';
-    return '/customer';
-  };
-
-  const redirectRoute = getRedirectRoute();
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -51,21 +38,21 @@ const App = () => {
           <Fragment>
             <Routes>
               <Route path="/" element={<HomePage isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />} />
-              <Route path="/login" element={<Navigate to={redirectRoute} replace />} />
+              {/* <Route path="/login" element={<Navigate to={redirectRoute} replace />} /> */}
               <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminDashboard isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/staff" element={<ProtectedRoute roles={['staff', 'kitchen_staff']}><StaffDashboard isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/customer" element={<ProtectedRoute roles={['customer']}><CustomerDashboard isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/manage-menu" element={<ProtectedRoute permissions={['manage_menu']}><MenuManagement isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/manage-orders" element={<ProtectedRoute permissions={['manage_orders']}><ManageOrders isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/manage-inventory" element={<ProtectedRoute permissions={['inventory_management']}><ManageInventory isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
-              <Route path="/manage-staff" element={<ProtectedRoute permissions={['manage_staff']}><ManageStaff isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
+              <Route path="/manage-staff" element={<ProtectedRoute roles={['admin']}><ManageStaff isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/manage-customers" element={<ProtectedRoute permissions={['manage_customers']}><ManageCustomers isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/reservations" element={<ProtectedRoute permissions={['manage_reservations']}><Reservations isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
-              <Route path="/purchase-manage" element={<ProtectedRoute permissions={['purchase_management']}><PurchaseManage isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
-              <Route path="/production" element={<ProtectedRoute permissions={['production_management']}><Production isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
+              <Route path="/payment-manage" element={<ProtectedRoute permissions={['manage_payments']}><ManagePayments isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute permissions={['view_reports']}><Reports isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/analytics" element={<ProtectedRoute permissions={['analytics_management']}><Analytics isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
-              <Route path="/messages" element={<ProtectedRoute permissions={['manage_messages']}><Messages isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
+              <Route path="/order-items-details/:id" element={<OrderItemDetails permissions={['manage_orders']} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />} />
+              <Route path="/view-order/:id" element={<ProtectedRoute permissions={['manage_orders']}><ViewOrderDetails isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/item-details/:id" element={<ItemDetails isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />} />
               <Route path="/not-authorized" element={<NotAuthorized />} />
@@ -74,8 +61,10 @@ const App = () => {
           </Fragment>
         ) : (
           <Routes>
-            <Route path="/" element={<HomePage isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/verify-otp" element={<VerifyOTP />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="*" element={<NotAuthorized />} />
           </Routes>
         )}
