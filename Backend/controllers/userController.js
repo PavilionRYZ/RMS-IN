@@ -184,12 +184,12 @@ exports.updateUser = async (req, res, next) => {
     const updates = req.body;
 
     // Disallow certain fields from being updated for security
-    const restrictedFields = ["password", "role"];
-    for (let field of restrictedFields) {
-      if (updates[field]) {
-        return res.status(400).json({ message: `${field} cannot be updated via this endpoint` });
-      }
-    }
+    // const restrictedFields = ["password", "role"];
+    // for (let field of restrictedFields) {
+    //   if (updates[field]) {
+    //     return res.status(400).json({ message: `${field} cannot be updated via this endpoint` });
+    //   }
+    // }
 
     // Find the user and update their credentials
     const updatedUser = await User.findByIdAndUpdate(userId, updates, {
@@ -300,6 +300,7 @@ exports.updateUserCredentials = async (req, res, next) => {
 exports.deleteUser = async (req, res, next) => {
   try {
     const userId = req.params.id;
+    console.log(userId);
     await User.findByIdAndDelete(userId);
     res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {

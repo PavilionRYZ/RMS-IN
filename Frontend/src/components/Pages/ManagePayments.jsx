@@ -241,12 +241,14 @@ const ManagePayments = ({ isSidebarOpen, setIsSidebarOpen }) => {
       key: "actions",
       render: (record) => (
         <div className="flex gap-2">
-          <Button
-            size="medium"
-            onClick={() => navigate(`/view-order/${record._id}`)}
-          >
-            View Details
-          </Button>
+         <Button
+  type="primary"
+  size="medium"
+  onClick={() => navigate(`/view-order/${record._id}`)}
+  disabled={record.status !== "completed"}
+>
+  View Details
+</Button>
           {!record.payment && record.status === "completed" && (
             <Button
               type="primary"

@@ -123,8 +123,8 @@ exports.getMenuItems = async (req, res, next) => {
         }
 
         // 🔹 Pagination (Default: page 1, limit 10)
-        page = Number(page) || 1;
-        limit = Number(limit) || 10;
+        page = Number(page);
+        limit = Number(limit);
         const skip = (page - 1) * limit;
 
         // 🔹 Fetch menu items

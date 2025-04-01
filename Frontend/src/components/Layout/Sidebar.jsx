@@ -3,19 +3,21 @@ import { FaBars, FaHome, FaTimes, FaTachometerAlt, FaShoppingCart, FaCalendarAlt
 import { MdOutlineMenuBook } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
-import { logout } from "../Redux/Slices/authSlice";
-import {resetUserState} from "../Redux/Slices/userSlice";
+import { logout,clearCookies } from "../Redux/Slices/authSlice";
+import { resetUserState } from "../Redux/Slices/userSlice";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { clearOrderState } from "../Redux/Slices/orderSlice";
 
+// Navigation links data
 const navLinks = [
   { to: "/", label: "Home", icon: FaHome, permission: null },
   { to: "/staff", label: "Dashboard", icon: FaTachometerAlt, roles: ["kitchen_staff", "staff"] },
-  { to: "/manage-orders", label: "Manage Order", icon: FaShoppingCart, permission: "manage_orders" },
+  // { to: "/admin", label: "ADashboard", icon: FaTachometerAlt, roles: "admin" },
+  { to: "/manage_orders", label: "Manage Order", icon: FaShoppingCart, permission: "manage_orders" },
   { to: "/manage-inventory", label: "Manage Inventory", icon: FaBox, permission: "inventory_management" },
   { to: "/manage-menu", label: "Manage Menu", icon: MdOutlineMenuBook, permission: "manage_menu" },
-  { to: "/manage-staff", label: "Manage Staff", icon: FaUsers, permission: "manage_staff",role:"admin" },
+  { to: "/manage-staff", label: "Manage Staff", icon: FaUsers, permission: "manage_staff", role: "admin" },
   { to: "/manage-customers", label: "Manage Customers", icon: FaUsers, permission: "manage_customers" },
   { to: "/reservations", label: "Reservation", icon: FaCalendarAlt, permission: "manage_reservations" },
   { to: "/payment-manage", label: "Payment Manage", icon: FaBox, permission: "manage_payments" },
@@ -25,6 +27,7 @@ const navLinks = [
   { to: "/messages", label: "Message", icon: FaEnvelope, permission: "manage_messages" },
 ];
 
+// Role-based access permissions
 const roleAccess = {
   admin: ["dashboard_access", "manage_orders", "manage_reservations", "manage_payments", "production_management", "view_reports", "analytics_management", "manage_messages"],
   kitchen_staff: [],
@@ -32,9 +35,10 @@ const roleAccess = {
   customer: ["manage_reservations", "manage_messages"],
 };
 
-const navItemClass = "flex items-center gap-4 p-4 hover:bg-gray-700 transition-colors duration-200";
-const iconClass = "text-xl";
-const labelClass = "ml-4";
+// CSS Classes for styling
+const navItemClass = "flex items-center gap-4 p-4 hover:bg-indigo-600 transition-all duration-300 rounded-lg mx-2 my-1 relative overflow-hidden group";
+const iconClass = "text-xl transform group-hover:scale-110 transition-transform duration-300";
+const labelClass = "ml-4 text-sm font-medium";
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const { user, loading } = useSelector((state) => state.auth);
@@ -63,6 +67,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
       toast.success("Logged out successfully!", toastOptions);
       dispatch(resetUserState());
       dispatch(clearOrderState());
+      dispatch(clearCookies());
     } catch (error) {
       toast.error(error || "Logout failed. Please try again.", toastOptions);
       console.error("Logout failed:", error);
@@ -91,7 +96,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
 
   const handleNavigation = (to) => {
     console.log(`Navigating to ${to}`);
-    // Use setTimeout to debounce navigation and avoid race conditions
     setTimeout(() => {
       navigate(to);
     }, 0);
@@ -99,58 +103,71 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
 
   return (
     <div
-      className={`bg-gray-800 z-50 min-h-screen text-white h-screen fixed top-0 left-0 transition-all duration-300 shadow-lg ${
-        isSidebarOpen ? "w-64" : "w-16"
+      className={`bg-gradient-to-b from-indigo-900 via-indigo-800 to-indigo-900 z-50 min-h-screen text-white h-screen fixed top-0 left-0 transition-all duration-500 shadow-2xl ${
+        isSidebarOpen ? "w-72" : "w-20"
       }`}
+      style={{
+        backgroundImage: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 100%)",
+        boxShadow: "inset 0 0 15px rgba(0,0,0,0.3)",
+      }}
     >
-      <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gradient-to-r from-gray-900 to-gray-800">
+      {/* Header Section */}
+      <div className="flex items-center justify-between p-4 border-b border-indigo-500 bg-gradient-to-r from-indigo-900 to-indigo-700 shadow-lg">
         {isSidebarOpen && (
           <div className="flex gap-3 items-center space-x-3">
-            <div className="relative">
+            <div className="relative group">
               <img
                 src={user?.image || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}
                 alt="User Avatar"
-                className="w-12 h-12 rounded-full border-2 border-green-400 shadow-md"
+                className="w-14 h-14 rounded-full border-4 border-indigo-400 shadow-lg transform group-hover:scale-105 transition-transform duration-300"
                 onError={(e) => (e.target.src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png")}
               />
-              <span className="absolute bottom-0 right-0 w-5 h-5 bg-green-400 rounded-full border-2 border-gray-800"></span>
+              <span className="absolute bottom-0 right-0 w-6 h-6 bg-green-400 rounded-full border-3 border-indigo-900 animate-pulse"></span>
             </div>
             <div className="flex flex-col">
-              <h2 className="text-base font-semibold text-white">{user?.name || "User Name"}</h2>
-              <p className="text-xs text-green-400 capitalize">{user?.role || "Role"}</p>
+              <h2 className="text-lg font-bold text-indigo-100 tracking-wide">{user?.name || "User Name"}</h2>
+              <p className="text-xs text-indigo-300 capitalize font-semibold">{user?.role || "Role"}</p>
             </div>
           </div>
         )}
         <button
           onClick={toggleSidebar}
-          className="p-2 rounded-full text-white hover:bg-gray-700 focus:outline-none hover:text-green-400 transition-all duration-200"
+          className="p-2 rounded-full text-indigo-200 hover:bg-indigo-600 hover:text-white focus:outline-none transform hover:scale-110 transition-all duration-300 shadow-md"
           aria-label={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
         >
-          {isSidebarOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+          {isSidebarOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
         </button>
       </div>
 
-      <nav className="mt-6 flex flex-col h-[calc(100%-80px)]">
-        <ul className="flex-1">
+      {/* Navigation Section */}
+      <nav className="mt-6 flex flex-col h-[calc(100%-90px)]">
+        <ul className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-500 scrollbar-track-indigo-900">
           {filteredNavLinks.map(({ to, label, icon: Icon }) => (
             <li key={label}>
               <div
-                onClick={() => handleNavigation(to)} // Use custom handler
-                className={`${navItemClass} ${location.pathname === to ? "bg-gray-700" : ""}`}
-                style={{ cursor: 'pointer' }}
+                onClick={() => handleNavigation(to)}
+                className={`${navItemClass} ${
+                  location.pathname === to ? "bg-indigo-600 shadow-md" : ""
+                }`}
+                style={{ cursor: "pointer" }}
               >
-                <Icon className={iconClass} />
-                {isSidebarOpen && <span className={labelClass}>{label}</span>}
+                <Icon className={`${iconClass} text-indigo-500 group-hover:text-white`} />
+                {isSidebarOpen && (
+                  <span className={`${labelClass} text-indigo-300 group-hover:text-white`}>{label}</span>
+                )}
+                {/* Hover Effect Overlay */}
+                <div className="absolute inset-0 bg-indigo-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-lg"></div>
               </div>
             </li>
           ))}
         </ul>
 
+        {/* Logout Button */}
         <div className="mt-auto">
           <button
             onClick={handleLogout}
             disabled={loading}
-            className={`flex items-center w-full p-4 text-white hover:bg-red-600 transition-colors duration-200 ${
+            className={`flex items-center w-full p-4 text-white hover:bg-red-600 transition-all duration-300 rounded-lg mx-2 mb-2 shadow-lg ${
               loading ? "opacity-50 cursor-not-allowed" : ""
             }`}
             aria-label="Logout"
@@ -177,9 +194,13 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                 ></path>
               </svg>
             ) : (
-              <FaSignOutAlt className={iconClass} />
+              <FaSignOutAlt className={`${iconClass} text-red-400`} />
             )}
-            {isSidebarOpen && <span className={labelClass}>{loading ? "Logging out..." : "Logout"}</span>}
+            {isSidebarOpen && (
+              <span className={`${labelClass} ${loading ? "text-gray-300" : "text-red-400"}`}>
+                {loading ? "Logging out..." : "Logout"}
+              </span>
+            )}
           </button>
         </div>
       </nav>

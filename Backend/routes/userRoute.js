@@ -10,7 +10,7 @@ router.route("/getAllUsers").get(verifyAdmin, getAllUsers);
 router.route("/login").post(loginUser);
 router.route("/logout").post(logoutUser);
 router.route("/updateUserCredentials").patch(verifyToken,verifyAdmin, updateUserCredentials);
-router.route("/deleteUser/:userId").delete(verifyAdmin, deleteUser);
+router.route("/deleteUser/:id").delete(verifyAdmin, deleteUser);
 router.route("/forgotPassword").post(forgotPassword);
 router.route("/resetPassword").post(resetPassword);
 router.route("/verifyOTP").post(verifyOTP);

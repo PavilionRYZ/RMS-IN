@@ -1,9 +1,11 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { useState } from 'react';
+/* eslint-disable no-unused-vars */
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
+// import Cookies from "js-cookie";
 import LoginPage from './components/Auth/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import AdminDashboard from './components/Pages/AdminDashboard';
+// import AdminDashboard from './components/Pages/AdminDashboard';
 import StaffDashboard from './components/Pages/StaffDashboard';
 import CustomerDashboard from './components/Pages/CustomerDashboard';
 import MenuManagement from './components/Pages/MenuManagement';
@@ -27,10 +29,25 @@ import OrderItemDetails from "./components/Pages/OrderItemsDetails";
 import ForgotPassword from './components/Pages/ForgotPassword';
 import VerifyOTP from './components/Pages/VerifyOTP';
 import ResetPassword from './components/Pages/ResetPassword';
+// import { clearCookies } from './components/Redux/Slices/authSlice';
+// import { clearOrderState } from './components/Redux/Slices/orderSlice';
+// import { resetUserState } from './components/Redux/Slices/userSlice';
 const App = () => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
 
+  // const dispatch = useDispatch();
+  // const navigate = useNavigate();
+
+  // useEffect(() => {
+  //   const token = Cookies.get('token');
+  //   if (!token) {
+  //     dispatch(clearCookies());
+  //     dispatch(resetUserState());
+  //     dispatch(clearOrderState());
+  //     navigate('/login');
+  //   }
+  // })
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <div className="flex-1">
@@ -39,11 +56,11 @@ const App = () => {
             <Routes>
               <Route path="/" element={<HomePage isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />} />
               {/* <Route path="/login" element={<Navigate to={redirectRoute} replace />} /> */}
-              <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminDashboard isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
+              {/* <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminDashboard isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} /> */}
               <Route path="/staff" element={<ProtectedRoute roles={['staff', 'kitchen_staff']}><StaffDashboard isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/customer" element={<ProtectedRoute roles={['customer']}><CustomerDashboard isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/manage-menu" element={<ProtectedRoute permissions={['manage_menu']}><MenuManagement isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
-              <Route path="/manage-orders" element={<ProtectedRoute permissions={['manage_orders']}><ManageOrders isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
+              <Route path="/manage_orders" element={<ProtectedRoute permissions={['manage_orders']}><ManageOrders isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/manage-inventory" element={<ProtectedRoute permissions={['inventory_management']}><ManageInventory isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/manage-staff" element={<ProtectedRoute roles={['admin']}><ManageStaff isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
               <Route path="/manage-customers" element={<ProtectedRoute permissions={['manage_customers']}><ManageCustomers isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} /></ProtectedRoute>} />
