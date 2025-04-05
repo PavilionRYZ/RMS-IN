@@ -26,11 +26,11 @@ exports.markAttendance = async (req, res, next) => {
         });
 
         await attendance.save();
-
+        const populatedAttendance = await Attendance.findById(attendance._id).populate("user", "name email role");
         res.status(201).json({
             success: true,
             message: "Attendance marked successfully",
-            attendance,
+            attendance: populatedAttendance,
         });
     } catch (error) {
         console.error("Error marking attendance:", error);
@@ -99,11 +99,11 @@ exports.createSalaryRecord = async (req, res, next) => {
         });
 
         await salaryRecord.save();
-
+        const populatedSalaryRecord = await SalaryRecord.findById(salaryRecord._id).populate("user", "name email role");
         res.status(201).json({
             success: true,
             message: "Salary record created successfully",
-            salaryRecord,
+            salaryRecord: populatedSalaryRecord,
         });
     } catch (error) {
         console.error("Error creating salary record:", error);

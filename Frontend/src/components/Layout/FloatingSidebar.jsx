@@ -2,7 +2,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { FaBars, FaHome, FaTimes, FaTachometerAlt, FaShoppingCart, FaCalendarAlt, FaBox, FaCogs, FaChartBar, FaEnvelope, FaSignOutAlt, FaUsers } from "react-icons/fa";
-import { MdOutlineMenuBook,MdPayments  } from "react-icons/md";
+import { MdOutlineMenuBook,MdPayments ,MdOutlinePayments  } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { logout, clearCookies } from "../Redux/Slices/authSlice";
@@ -19,9 +19,11 @@ const navLinks = [
   { to: "/manage-inventory", label: "Manage Inventory", icon: FaBox, permission: "inventory_management" },
   { to: "/manage-menu", label: "Manage Menu", icon: MdOutlineMenuBook, permission: "manage_menu" },
   { to: "/manage-staff", label: "Manage Staff", icon: FaUsers, permission: "manage_staff", role: "admin" },
+  { to: "/manage-staff-payments", label: "Manage Salary", icon: MdOutlinePayments , role: "admin" },
   { to: "/payment-manage", label: "Payment Manage", icon: MdPayments , permission: "manage_payments" },
   { to: "/reports", label: "Report", icon: FaChartBar, permission: "view_reports" },
   { to: "/analytics", label: "Analytics", icon: FaChartBar, permission: "analytics_management" },
+
 ];
 
 const roleAccess = {

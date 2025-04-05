@@ -26,6 +26,7 @@ import ViewOrderDetails from './components/Pages/ViewOrderDetails';
 import Cart from "./components/Pages/Cart";
 import ItemDetails from "./components/Pages/ItemDetails";
 import OrderItemDetails from "./components/Pages/OrderItemsDetails";
+import ManageStaffPayments from './components/Pages/ManageStaffPayments';
 import ForgotPassword from './components/Pages/ForgotPassword';
 import VerifyOTP from './components/Pages/VerifyOTP';
 import ResetPassword from './components/Pages/ResetPassword';
@@ -62,6 +63,7 @@ const App = () => {
               <Route path="/manage_orders" element={<ProtectedRoute permissions={['manage_orders']}><ManageOrders  /></ProtectedRoute>} />
               <Route path="/manage-inventory" element={<ProtectedRoute permissions={['inventory_management']}><ManageInventory  /></ProtectedRoute>} />
               <Route path="/manage-staff" element={<ProtectedRoute roles={['admin']}><ManageStaff  /></ProtectedRoute>} />
+              <Route path="/manage-staff-payments" element={<ProtectedRoute><ManageStaffPayments roles={['admin']}/></ProtectedRoute>} />
               <Route path="/manage-customers" element={<ProtectedRoute permissions={['manage_customers']}><ManageCustomers  /></ProtectedRoute>} />
               <Route path="/reservations" element={<ProtectedRoute permissions={['manage_reservations']}><Reservations  /></ProtectedRoute>} />
               <Route path="/payment-manage" element={<ProtectedRoute permissions={['manage_payments']}><ManagePayments  /></ProtectedRoute>} />
