@@ -59,3 +59,11 @@
 .margin{
     margin-bottom: 1rem;
 }
+.margin-t{
+    margin-top: 1rem;
+}
+.shadow-logo {
+  box-shadow: 10px 10px 20px rgba(0, 108, 231, 0.5);
+}
+
+/* menu item card*/

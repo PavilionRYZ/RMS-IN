@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Sidebar from "../Layout/Sidebar";
+import FloatingSidebar from "../Layout/FloatingSidebar";
 import { getAllOrders, updateOrderStatus, clearOrderState } from "../Redux/Slices/orderSlice";
 import { Table, Select, Input, DatePicker, Pagination } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
@@ -14,7 +14,7 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 
-const ManageOrders = ({ isSidebarOpen, setIsSidebarOpen }) => {
+const ManageOrders = () => {
   const dispatch = useDispatch();
   const { orders, loading, error, totalOrders } = useSelector((state) => state.order);
 
@@ -234,14 +234,12 @@ const ManageOrders = ({ isSidebarOpen, setIsSidebarOpen }) => {
       <div className="min-h-screen flex bg-gradient-to-br from-gray-100 to-gray-200">
         {/* Sidebar */}
         <div className="left-side-navigation">
-          <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+          <FloatingSidebar />
         </div>
 
         {/* Main Content */}
         <div
-          className={`flex-1 transition-all duration-300 p-6 md:p-10 ${
-            isSidebarOpen ? "menu-homeopen" : "menu-home"
-          }`}
+          className={`flex-1 transition-all duration-300 p-6 md:p-10`}
         >
           {/* Header */}
           <motion.header 

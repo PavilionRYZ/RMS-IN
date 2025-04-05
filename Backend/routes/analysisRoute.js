@@ -1,8 +1,9 @@
-// const express = require('express');
-// const router = express.Router();
-// const { getSalesAnalysis } = require('../controllers/analysisController');
-// const { verifyToken, checkAdminOrPermission} = require('../middleware/authMiddleware');
+const express = require('express');
+const router = express.Router();
+const { computeDailyAnalytics,getAnalytics } = require('../controllers/analysisController');
+const { verifyToken, checkAdminOrPermission} = require('../middleware/authMiddleware');
 
-// router.route('/admin/analytics').get(verifyToken, checkAdminOrPermission("view_reports"), getSalesAnalysis);
+router.route('/analytics/daily').get(verifyToken, checkAdminOrPermission("view_reports"), computeDailyAnalytics);
+router.route('/analytics').get(verifyToken, checkAdminOrPermission("view_reports"), getAnalytics);
 
-// module.exports = router;
+module.exports = router;

@@ -4,10 +4,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getMenuItem, resetMenuItem } from "../Redux/Slices/menuSlice";
 import { addToCart, updateQuantity } from "../Redux/Slices/cartSlice";
 import { FaShoppingCart, FaPlus, FaMinus, FaArrowLeft } from "react-icons/fa";
-import Sidebar from "../Layout/Sidebar";
+import FloatingSidebar from "../Layout/FloatingSidebar";
 import PropTypes from "prop-types";
 
-const ItemDetails = ({ isSidebarOpen, setIsSidebarOpen }) => {
+const ItemDetails = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { id } = useParams();
@@ -128,11 +128,9 @@ const ItemDetails = ({ isSidebarOpen, setIsSidebarOpen }) => {
   return (
     <Fragment>
       <div className="container mx-auto p-4 pt-6 md:p-6 lg:p-8">
-        <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+        <FloatingSidebar />
         <div
-          className={`flex-1 w-full transition-all duration-300 ${
-            isSidebarOpen ? "menu-homeopen" : "menu-home"
-          }`}
+          className={`flex-1 w-full transition-all duration-300`}
         >
           <button
             onClick={() => navigate(-1)}

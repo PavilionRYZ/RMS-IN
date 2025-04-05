@@ -2,7 +2,7 @@
 import { Fragment, useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "../Layout/Sidebar";
+import FloatingSidebar from "../Layout/FloatingSidebar";
 import {
   getMenuItems,
   createMenuItem,
@@ -80,7 +80,7 @@ const StyledButton = styled(Button)`
   font-weight: 500;
 `;
 
-const ManageMenu = ({ isSidebarOpen, setIsSidebarOpen }) => {
+const ManageMenu = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { menu, menuItem, loading, error } = useSelector((state) => state.menu);
@@ -443,11 +443,9 @@ const ManageMenu = ({ isSidebarOpen, setIsSidebarOpen }) => {
   return (
     <Fragment>
       <div className="main-div flex">
-        <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+        <FloatingSidebar />
         <motion.div
-          className={`content w-full p-6 transition-all duration-300 ${
-            isSidebarOpen ? "ml-64" : "ml-16"
-          }`}
+          className={`content w-full p-6 transition-all duration-300`}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
@@ -511,6 +509,8 @@ const ManageMenu = ({ isSidebarOpen, setIsSidebarOpen }) => {
                         <Option value="beverages">Beverages</Option>
                         <Option value="mocktails">Mocktails</Option>
                         <Option value="cocktails">Cocktails</Option>
+                        <Option value="others">Snaks</Option>
+                        <Option value="desserts">Desserts</Option>
                       </Select>
                     </Form.Item>
                   </Col>
@@ -758,6 +758,8 @@ const ManageMenu = ({ isSidebarOpen, setIsSidebarOpen }) => {
                         <Option value="beverages">Beverages</Option>
                         <Option value="mocktails">Mocktails</Option>
                         <Option value="cocktails">Cocktails</Option>
+                        <Option value="others">Snaks</Option>
+                        <Option value="desserts">Desserts</Option>
                       </Select>
                     </Form.Item>
                   </Col>

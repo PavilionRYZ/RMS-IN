@@ -2,7 +2,7 @@ import { Fragment, useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { fetchAllUsers, registerUser, updateUser, deleteUser } from "../Redux/Slices/userSlice";
-import Sidebar from "../Layout/Sidebar";
+import FloatingSidebar from "../Layout/FloatingSidebar";
 import {
   Table,
   Form,
@@ -60,7 +60,7 @@ const StyledButton = styled(Button)`
   font-weight: 500;
 `;
 
-const ManageStaff = ({ isSidebarOpen, setIsSidebarOpen }) => {
+const ManageStaff = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { users, loading, error } = useSelector((state) => state.user);
@@ -71,7 +71,7 @@ const ManageStaff = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const [selectedUser, setSelectedUser] = useState(null);
 
   const availablePermissions = [
-    "manage_inventory",
+    "inventory_management",
     "manage_orders",
     "manage_menu",
     "manage_staff",
@@ -233,9 +233,9 @@ const ManageStaff = ({ isSidebarOpen, setIsSidebarOpen }) => {
   return (
     <Fragment>
       <div className="main-div flex">
-        <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+        <FloatingSidebar />
         <motion.div
-          className={`content w-full p-6 transition-all duration-300 ${isSidebarOpen ? "ml-64" : "ml-16"}`}
+          className={`content w-full p-6 transition-all duration-300`}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}

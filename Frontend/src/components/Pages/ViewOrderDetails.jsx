@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Fragment, useEffect } from "react";
-import Sidebar from "../Layout/Sidebar";
+import FloatingSidebar from "../Layout/FloatingSidebar";
 import { getOrderById, clearOrderState } from "../Redux/Slices/orderSlice";
 import { getPaymentsByOrder, clearPaymentState } from "../Redux/Slices/paymentSlice";
 import PropTypes from "prop-types";
@@ -13,7 +13,7 @@ import orderDetails from "../../assets/OrderDetails.svg";
 import jsPDF from "jspdf";
 import JsBarcode from "jsbarcode";
 
-const ViewOrderDetails = ({ isSidebarOpen, setIsSidebarOpen }) => {
+const ViewOrderDetails = () => {
   const { order, loading, error } = useSelector((state) => state.order);
   const { payments, loading: paymentLoading, error: paymentError } = useSelector((state) => state.payment);
   const { id } = useParams();
@@ -214,11 +214,9 @@ const ViewOrderDetails = ({ isSidebarOpen, setIsSidebarOpen }) => {
   return (
     <Fragment>
       <div className="main">
-        <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+        <FloatingSidebar/>
         <div
-          className={`flex items-center transition-all duration-300 ${
-            isSidebarOpen ? "menu-homeopen" : "menu-home"
-          }`}
+          className={`flex items-center transition-all duration-300`}
         >
           <div className="container mx-auto p-4 pt-6 md:p-6 lg:p-8">
             <button

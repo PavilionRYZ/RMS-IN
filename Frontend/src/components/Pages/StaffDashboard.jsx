@@ -2,7 +2,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import Sidebar from '../Layout/Sidebar';
+import FloatingSidebar from '../Layout/FloatingSidebar';
 import PropTypes from 'prop-types';
 import { FaBox, FaChartBar, FaClipboardList, FaFileInvoice, FaMoneyBill, FaUsers, FaUtensils } from 'react-icons/fa';
 
@@ -16,7 +16,7 @@ const StaffDashboard = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const actionMap = {
     manage_orders: { name: "Manage Orders", link: "/manage_orders", icon: <FaClipboardList />, bg: "bg-gradient-to-r from-blue-500 to-indigo-500" },
     manage_menu: { name: "Manage Menu", link: "/manage-menu", icon: <FaUtensils />, bg: "bg-gradient-to-r from-green-500 to-teal-500" },
-    manage_inventory: { name: "Inventory Management", link: "/manage_inventory", icon: <FaBox />, bg: "bg-gradient-to-r from-purple-500 to-pink-500" },
+    inventory_management: { name: "Inventory Management", link: "/manage-inventory", icon: <FaBox />, bg: "bg-gradient-to-r from-purple-500 to-pink-500" },
     analytics_management: { name: "Analytics Management", link: "/analytics", icon: <FaChartBar />, bg: "bg-gradient-to-r from-red-500 to-orange-500" },
     view_reports: { name: "View Reports", link: "/reports", icon: <FaFileInvoice />, bg: "bg-gradient-to-r from-gray-500 to-gray-700" },
     manage_payments: { name: "Manage Payments", link: "/payment-manage", icon: <FaMoneyBill />, bg: "bg-gradient-to-r from-yellow-500 to-amber-500" },
@@ -34,7 +34,7 @@ const availableActions = quickActions
       <div className="min-h-screen flex bg-gradient-to-br from-gray-100 to-gray-200">
         {/* Sidebar */}
         <div className="left-side-navigation">
-          <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+          <FloatingSidebar />
         </div>
 
         {/* Main Content */}

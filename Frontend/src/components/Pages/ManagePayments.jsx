@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Fragment, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Sidebar from "../Layout/Sidebar";
+import FloatingSidebar from "../Layout/FloatingSidebar";
 import { getAllOrders, clearOrderState } from "../Redux/Slices/orderSlice";
 import { getPaymentsByOrder, updatePaymentStatus, createPayment, clearPaymentState } from "../Redux/Slices/paymentSlice";
 import { Table, Button, Select, Input, DatePicker, Pagination, Modal, Form, Input as AntInput } from "antd";
@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
-const ManagePayments = ({ isSidebarOpen, setIsSidebarOpen }) => {
+const ManagePayments = () => {
   const dispatch = useDispatch();
   const { orders, totalOrders, loading: orderLoading, error: orderError } = useSelector((state) => state.order);
   const { payments, loading: paymentLoading, error: paymentError } = useSelector((state) => state.payment);
@@ -366,14 +366,9 @@ const ManagePayments = ({ isSidebarOpen, setIsSidebarOpen }) => {
   return (
     <Fragment>
       <div className="main-div flex">
-        <Sidebar
-          isSidebarOpen={isSidebarOpen}
-          setIsSidebarOpen={setIsSidebarOpen}
-        />
+        <FloatingSidebar/>
         <div
-          className={`content w-full p-6 transition-all duration-300 ${
-            isSidebarOpen ? "ml-64" : "ml-16"
-          }`}
+          className={`content w-full p-6 transition-all duration-300`}
         >
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold">Manage Payments</h1>

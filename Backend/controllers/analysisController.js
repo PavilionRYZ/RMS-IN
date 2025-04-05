@@ -1,231 +1,303 @@
-// const Order = require("../models/order");
-// const SalesAnalytics = require("../models/analytics");
-// const InventoryItem = require("../models/inventory");
+const Order = require("../models/order");
+const Payment = require("../models/payments");
+const MenuItem = require("../models/menu");
+const InventoryItem = require("../models/inventory");
+const Analytics = require("../models/analytics");
+const errorHandler = require("../utils/errorHandler");
 
-// // Utility function to get start and end date of time periods
-// const getTimePeriod = (period, startDate, endDate) => {
-//     const now = new Date();
-//     let start, end;
+// Mock mapping of MenuItem to InventoryItem usage (in a real app, this would be a separate model)
+const menuItemToInventoryMapping = {
+  // Example: { menu_item_id: { inventory_item_id: quantity_used_per_unit } }
+  // "menu_item_id_1": { "inventory_item_id_1": 0.1, "inventory_item_id_2": 0.2 }
+};
 
-//     switch (period) {
-//         case "weekly":
-//             start = new Date();
-//             start.setDate(now.getDate() - 7);
-//             break;
-//         case "monthly":
-//             start = new Date(now.getFullYear(), now.getMonth(), 1);
-//             break;
-//         case "yearly":
-//             start = new Date(now.getFullYear(), 0, 1);
-//             break;
-//         case "custom":
-//             start = new Date(startDate);
-//             end = new Date(endDate);
-//             break;
-//         default:
-//             start = new Date(0);
-//     }
+// Helper function to get the start and end of a day
+const getDayRange = (date) => {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(date);
+  end.setHours(23, 59, 59, 999);
+  return { start, end };
+};
 
-//     end = end || now;
-//     return { start, end };
-// };
+// Compute and store daily analytics
+exports.computeDailyAnalytics = async (req, res, next) => {
+  try {
+    const { date } = req.body; // Date for which to compute analytics (e.g., "2025-04-02")
+    const targetDate = date ? new Date(date) : new Date();
+    const { start, end } = getDayRange(targetDate);
 
-// // 📌 Controller: Sales Analysis
-// exports.getSalesAnalysis = async (req, res, next) => {
-//     try {
-//         const { period, startDate, endDate, payment_method, customer_type, sort } = req.query;
-//         const { start, end } = getTimePeriod(period, startDate, endDate);
+    // Check if analytics for this date already exist
+    let analytics = await Analytics.findOne({ date: start });
+    if (analytics) {
+      return res.status(200).json({
+        success: true,
+        message: "Analytics already computed for this date",
+        analytics,
+      });
+    }
 
-//         const matchCriteria = {
-//             status: "completed",
-//             payment: { $ne: null }, // Only paid orders
-//             createdAt: { $gte: start, $lte: end }, // Filter by time range
-//         };
+    // Fetch orders for the given date
+    const orders = await Order.find({
+      createdAt: { $gte: start, $lte: end },
+      status: "completed",
+    }).populate("payment items.menu_item");
 
-//         if (payment_method) {
-//             matchCriteria["payment.payment_method"] = payment_method;
-//         }
-//         if (customer_type) {
-//             matchCriteria.order_type = customer_type;
-//         }
+    // Initialize analytics data
+    const analyticsData = {
+      date: start,
+      orders: {
+        total: orders.length,
+        by_type: { "dine-in": 0, takeaway: 0, online: 0 },
+        by_payment_method: { cash: 0, card: 0, online: 0 },
+      },
+      items: [],
+      inventory: [],
+      financials: {
+        total_revenue: 0,
+        total_cost: 0,
+        profit: 0,
+      },
+    };
 
-//         // 🔹 Aggregate Data
-//         const orders = await Order.aggregate([
-//             {
-//               $group: {
-//                 _id: null,
-//                 orders_count: { $sum: 1 },
-//                 completed_orders: { 
-//                   $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } 
-//                 },
-//                 total_revenue: { $sum: "$total_price" },
-//                 total_cost: { $sum: "$cost_price" },
-//                 net_profit: {
-//                   $subtract: [
-//                     { $sum: "$total_price" },
-//                     { $sum: "$cost_price" }
-//                   ]
-//                 },
-//                 payment_methods: { $push: "$payment.payment_method" },
-//                 customer_types: { $push: "$order_type" }
-//               }
-//             },
-//             {
-//               $unwind: "$payment_methods"
-//             },
-//             {
-//               $group: {
-//                 _id: "$payment_methods",
-//                 count: { $sum: 1 }
-//               }
-//             },
-//             {
-//               $group: {
-//                 _id: null,
-//                 orders_count: { $first: "$orders_count" },
-//                 completed_orders: { $first: "$completed_orders" },
-//                 total_revenue: { $first: "$total_revenue" },
-//                 total_cost: { $first: "$total_cost" },
-//                 net_profit: { $first: "$net_profit" },
-//                 payment_methods: { $push: { method: "$_id", count: "$count" } },
-//                 customer_types: { $first: "$customer_types" }
-//               }
-//             }
-//           ]);
-          
+    // Compute order analytics
+    const itemMap = new Map(); // Track items for frequency and revenue
+    const inventoryUsageMap = new Map(); // Track inventory usage
 
-//         if (!orders.length) {
-//             return res.status(200).json({ success: true, message: "No completed orders in this period", data: {} });
-//         }
+    for (const order of orders) {
+      // Order types
+      analyticsData.orders.by_type[order.order_type] += 1;
 
-//         let data = orders[0];
+      // Payment methods (from Payment model)
+      if (order.payment && order.payment.payment_status === "completed") {
+        analyticsData.orders.by_payment_method[order.payment.payment_method] += 1;
+      }
 
-//         // 🔹 Get Inventory Costs
-//         const inventoryData = await InventoryItem.aggregate([
-//             {
-//                 $match: {
-//                     last_updated: { $gte: start, $lte: end },
-//                 },
-//             },
-//             {
-//                 $group: {
-//                     _id: null,
-//                     total_cost: { $sum: "$total_spent" },
-//                 },
-//             },
-//         ]);
+      // Total revenue
+      analyticsData.financials.total_revenue += order.total_price;
 
-//         data.total_cost = inventoryData.length ? inventoryData[0].total_cost : 0;
-//         data.net_profit = data.total_revenue - data.total_cost;
+      // Items ordered
+      for (const item of order.items) {
+        const menuItem = item.menu_item;
+        const itemKey = menuItem._id.toString();
+        if (itemMap.has(itemKey)) {
+          const existing = itemMap.get(itemKey);
+          existing.total_quantity += item.quantity;
+          existing.total_revenue += item.quantity * menuItem.price;
+        } else {
+          itemMap.set(itemKey, {
+            menu_item_id: menuItem._id,
+            item_name: menuItem.name,
+            total_quantity: item.quantity,
+            total_revenue: item.quantity * menuItem.price,
+          });
+        }
 
-//         // 🔹 Payment Method Breakdown
-//         data.payment_methods = data.payment_methods.reduce((acc, method) => {
-//             acc[method] = (acc[method] || 0) + 1;
-//             return acc;
-//         }, {});
+        // Inventory usage (based on mock mapping)
+        const inventoryUsage = menuItemToInventoryMapping[itemKey];
+        if (inventoryUsage) {
+          for (const [invItemId, qtyPerUnit] of Object.entries(inventoryUsage)) {
+            const quantityUsed = qtyPerUnit * item.quantity;
+            const inventoryItem = await InventoryItem.findById(invItemId);
+            if (inventoryItem) {
+              const cost = quantityUsed * inventoryItem.unit_price;
+              analyticsData.financials.total_cost += cost;
 
-//         // 🔹 Sorting Functionality
-//         if (sort === "revenue") {
-//             data.orders = data.orders?.sort((a, b) => b.total_price - a.total_price);
-//         } else if (sort === "date") {
-//             data.orders = data.orders?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-//         }
+              if (inventoryUsageMap.has(invItemId)) {
+                inventoryUsageMap.get(invItemId).stock_used += quantityUsed;
+              } else {
+                inventoryUsageMap.set(invItemId, {
+                  inventory_item_id: invItemId,
+                  item_name: inventoryItem.item_name,
+                  current_stock: inventoryItem.quantity,
+                  stock_used: quantityUsed,
+                });
+              }
+            }
+          }
+        }
+      }
+    }
 
-//         res.status(200).json({ success: true, message: "Sales analysis generated", data });
-//     } catch (error) {
-//         console.error("Error generating sales analysis:", error);
-//         next(new Error("Failed to generate sales analysis"));
-//     }
-// };
+    // Convert maps to arrays for storage
+    analyticsData.items = Array.from(itemMap.values());
+    analyticsData.inventory = Array.from(inventoryUsageMap.values());
 
-// // 📌 Utility function to get the previous month’s start and end dates
-// const getPreviousMonthDates = () => {
-//     const now = new Date();
-//     const start = new Date(now.getFullYear(), now.getMonth() - 1, 1); // First day of last month
-//     const end = new Date(now.getFullYear(), now.getMonth(), 0); // Last day of last month
-//     return { start, end };
-// };
+    // Calculate profit
+    analyticsData.financials.profit =
+      analyticsData.financials.total_revenue - analyticsData.financials.total_cost;
 
-// // 📌 Save Monthly Sales Analysis to Database
-// exports.saveMonthlySalesAnalysis = async () => {
-//     try {
-//         const { start, end } = getPreviousMonthDates();
+    // Fetch current inventory levels for items not used in orders
+    const allInventoryItems = await InventoryItem.find();
+    for (const invItem of allInventoryItems) {
+      if (!analyticsData.inventory.some((i) => i.inventory_item_id.toString() === invItem._id.toString())) {
+        analyticsData.inventory.push({
+          inventory_item_id: invItem._id,
+          item_name: invItem.item_name,
+          current_stock: invItem.quantity,
+          stock_used: 0,
+        });
+      }
+    }
 
-//         const orders = await Order.aggregate([
-//             {
-//                 $lookup: {
-//                     from: "payments",
-//                     localField: "payment",
-//                     foreignField: "_id",
-//                     as: "payment",
-//                 },
-//             },
-//             { $unwind: "$payment" },
-//             {
-//                 $match: {
-//                     status: "completed",
-//                     payment: { $ne: null },
-//                     createdAt: { $gte: start, $lte: end },
-//                 },
-//             },
-//             {
-//                 $group: {
-//                     _id: null,
-//                     orders_count: { $sum: 1 },
-//                     completed_orders: { $sum: 1 },
-//                     total_revenue: { $sum: "$total_price" },
-//                     payment_methods: {
-//                         cash: { $sum: { $cond: [{ $eq: ["$payment.payment_method", "cash"] }, 1, 0] } },
-//                         card: { $sum: { $cond: [{ $eq: ["$payment.payment_method", "card"] }, 1, 0] } },
-//                         online: { $sum: { $cond: [{ $eq: ["$payment.payment_method", "online"] }, 1, 0] } },
-//                     },
-//                     customer_types: {
-//                         dine_in: { $sum: { $cond: [{ $eq: ["$order_type", "dine-in"] }, 1, 0] } },
-//                         takeaway: { $sum: { $cond: [{ $eq: ["$order_type", "takeaway"] }, 1, 0] } },
-//                         online: { $sum: { $cond: [{ $eq: ["$order_type", "online"] }, 1, 0] } },
-//                     },
-//                 },
-//             },
-//         ]);
+    // Save analytics data
+    analytics = new Analytics(analyticsData);
+    await analytics.save();
 
-//         if (!orders.length) {
-//             console.log("No completed orders for last month. Skipping analytics save.");
-//             return;
-//         }
+    res.status(201).json({
+      success: true,
+      message: "Daily analytics computed successfully",
+      analytics,
+    });
+  } catch (error) {
+    console.error("Error computing daily analytics:", error);
+    next(new errorHandler(500, "Failed to compute daily analytics"));
+  }
+};
 
-//         let data = orders[0];
+// Get analytics for a date range (daily or monthly)
+exports.getAnalytics = async (req, res, next) => {
+  try {
+    let { startDate, endDate, type } = req.query; // type: "daily" or "monthly"
 
-//         // Fetch inventory costs for last month
-//         const inventoryData = await InventoryItem.aggregate([
-//             {
-//                 $match: { last_updated: { $gte: start, $lte: end } },
-//             },
-//             {
-//                 $group: {
-//                     _id: null,
-//                     total_cost: { $sum: "$total_spent" },
-//                 },
-//             },
-//         ]);
+    if (!startDate || !endDate) {
+      return next(new errorHandler(400, "Start date and end date are required"));
+    }
 
-//         data.total_cost = inventoryData.length ? inventoryData[0].total_cost : 0;
-//         data.net_profit = data.total_revenue - data.total_cost;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
 
-//         // Save analysis in database
-//         const newReport = new SalesAnalytics({
-//             date: start,
-//             orders_count: data.orders_count,
-//             completed_orders: data.completed_orders,
-//             total_revenue: data.total_revenue,
-//             payment_methods: data.payment_methods,
-//             customer_types: data.customer_types,
-//             total_cost: data.total_cost,
-//             net_profit: data.net_profit,
-//         });
+    let analytics;
+    if (type === "monthly") {
+      // Aggregate daily analytics into monthly data
+      analytics = await Analytics.aggregate([
+        {
+          $match: {
+            date: { $gte: start, $lte: end },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$date" },
+              month: { $month: "$date" },
+            },
+            total_orders: { $sum: "$orders.total" },
+            orders_by_type: {
+              $mergeObjects: {
+                "dine-in": { $sum: "$orders.by_type.dine-in" },
+                takeaway: { $sum: "$orders.by_type.takeaway" },
+                online: { $sum: "$orders.by_type.online" },
+              },
+            },
+            orders_by_payment_method: {
+              $mergeObjects: {
+                cash: { $sum: "$orders.by_payment_method.cash" },
+                card: { $sum: "$orders.by_payment_method.card" },
+                online: { $sum: "$orders.by_payment_method.online" },
+              },
+            },
+            items: {
+              $push: "$items",
+            },
+            inventory: {
+              $push: "$inventory",
+            },
+            total_revenue: { $sum: "$financials.total_revenue" },
+            total_cost: { $sum: "$financials.total_cost" },
+            profit: { $sum: "$financials.profit" },
+          },
+        },
+        {
+          $project: {
+            date: {
+              $dateFromParts: {
+                year: "$_id.year",
+                month: "$_id.month",
+                day: 1,
+              },
+            },
+            orders: {
+              total: "$total_orders",
+              by_type: "$orders_by_type",
+              by_payment_method: "$orders_by_payment_method",
+            },
+            items: {
+              $reduce: {
+                input: "$items",
+                initialValue: [],
+                in: { $concatArrays: ["$$value", "$$this"] },
+              },
+            },
+            inventory: {
+              $reduce: {
+                input: "$inventory",
+                initialValue: [],
+                in: { $concatArrays: ["$$value", "$$this"] },
+              },
+            },
+            financials: {
+              total_revenue: "$total_revenue",
+              total_cost: "$total_cost",
+              profit: "$profit",
+            },
+          },
+        },
+        { $sort: { date: 1 } },
+      ]);
 
-//         await newReport.save();
-//         console.log("✅ Monthly sales analysis saved successfully!");
-//     } catch (error) {
-//         console.error("❌ Error saving monthly sales analysis:", error);
-//     }
-// };
+      // Aggregate items for monthly data
+      analytics = analytics.map((month) => {
+        const itemMap = new Map();
+        for (const item of month.items) {
+          if (itemMap.has(item.item_name)) {
+            const existing = itemMap.get(item.item_name);
+            existing.total_quantity += item.total_quantity;
+            existing.total_revenue += item.total_revenue;
+          } else {
+            itemMap.set(item.item_name, {
+              menu_item_id: item.menu_item_id,
+              item_name: item.item_name,
+              total_quantity: item.total_quantity,
+              total_revenue: item.total_revenue,
+            });
+          }
+        }
+        month.items = Array.from(itemMap.values());
+
+        // Aggregate inventory for monthly data (use the latest stock level)
+        const inventoryMap = new Map();
+        for (const inv of month.inventory) {
+          if (inventoryMap.has(inv.inventory_item_id.toString())) {
+            const existing = inventoryMap.get(inv.inventory_item_id.toString());
+            existing.stock_used += inv.stock_used;
+            existing.current_stock = inv.current_stock; // Use the latest stock level
+          } else {
+            inventoryMap.set(inv.inventory_item_id.toString(), {
+              inventory_item_id: inv.inventory_item_id,
+              item_name: inv.item_name,
+              current_stock: inv.current_stock,
+              stock_used: inv.stock_used,
+            });
+          }
+        }
+        month.inventory = Array.from(inventoryMap.values());
+
+        return month;
+      });
+    } else {
+      // Fetch daily analytics
+      analytics = await Analytics.find({
+        date: { $gte: start, $lte: end },
+      }).sort({ date: 1 });
+    }
+
+    res.status(200).json({
+      success: true,
+      analytics,
+    });
+  } catch (error) {
+    console.error("Error fetching analytics:", error);
+    next(new errorHandler(500, "Failed to fetch analytics"));
+  }
+};

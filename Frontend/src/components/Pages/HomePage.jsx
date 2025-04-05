@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { getMenuItems } from "../Redux/Slices/menuSlice";
 import { addToCart, updateQuantity } from "../Redux/Slices/cartSlice";
-import Sidebar from "../Layout/Sidebar";
+import Sidebar from "../Layout/FloatingSidebar";
 import { FaShoppingCart, FaPlus, FaMinus, FaSearch } from "react-icons/fa";
 import { motion } from "framer-motion";
 import PropTypes from "prop-types";
@@ -24,7 +24,7 @@ const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
     dispatch(getMenuItems());
   }, [dispatch]);
 
-  const categories = ["All", "veg", "non-veg", "beverages", "mocktails", "cocktails"];
+  const categories = ["All", "veg", "non-veg", "beverages", "mocktails", "cocktails","snacks","desserts"];
   const types = ["All", "Indian", "Chinese", "Italian", "Continental"];
 
   const filteredMenu = menu
@@ -65,9 +65,7 @@ const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
         <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
 
         <div
-          className={`flex-1 w-full transition-all duration-300 ${
-            isSidebarOpen ? "menu-homeopen" : "menu-home"
-          }`}
+          className={`flex-1 w-full transition-all duration-300`}
         >
           {/* Hero Section */}
           <section
@@ -78,11 +76,12 @@ const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
           >
             <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/20"></div>
             <motion.div
-              className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6"
+              className="relative flex flex-col items-center z-10 max-w-5xl mx-auto px-4 sm:px-6"
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, ease: "easeOut" }}
             >
+              <img className="shadow-logo  w-48" src="../../../public/ResFvi.png" alt=""/> 
               <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold mb-6 tracking-tight leading-tight drop-shadow-lg">
                 Savor the Flavor at <span className="text-amber-400">RestoMaster</span>
               </h1>
@@ -156,7 +155,7 @@ const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
                 >
                   {categories.map((category) => (
                     <option key={category} value={category}>
-                      {category}
+                      {category.toUpperCase()}
                     </option>
                   ))}
                 </select>
@@ -167,7 +166,7 @@ const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
                 >
                   {types.map((type) => (
                     <option key={type} value={type}>
-                      {type}
+                      {type.toUpperCase()}
                     </option>
                   ))}
                 </select>
@@ -225,7 +224,7 @@ const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
                         return (
                           <motion.div
                             key={item._id}
-                            className={`bg-white p-6 sm:p-7 rounded-2xl shadow-lg transition-all duration-500 ${
+                            className={`bg-white p-6 sm:p-5 rounded-2xl shadow-lg transition-all duration-500 ${
                               isOutOfStock
                                 ? "opacity-60 cursor-not-allowed"
                                 : "hover:shadow-2xl hover:-translate-y-2"
@@ -242,7 +241,7 @@ const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
                                   "https://images.unsplash.com/photo-1513104890138-7cacd3a56ad8?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
                                 }
                                 alt={item.name}
-                                className="w-full h-56 sm:h-64 object-cover rounded-xl mb-5 cursor-pointer transition-transform duration-300 hover:scale-105"
+                                className="w-full h-46 sm:h-54 object-cover rounded-xl mb-5 cursor-pointer transition-transform duration-300 hover:scale-105"
                                 onError={(e) =>
                                   (e.target.src =
                                     "https://images.unsplash.com/photo-1513104890138-7cacd3a56ad8?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80")

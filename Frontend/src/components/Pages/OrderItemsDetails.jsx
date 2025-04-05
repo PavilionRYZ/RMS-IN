@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Fragment, useEffect } from "react";
-import Sidebar from "../Layout/Sidebar";
+import FloatingSidebar from "../Layout/FloatingSidebar";
 import { getOrderById, clearOrderState } from "../Redux/Slices/orderSlice";
 import PropTypes from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,7 +9,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaArrowLeft } from "react-icons/fa";
 
-const OrderItemsDetails = ({ isSidebarOpen, setIsSidebarOpen }) => {
+const OrderItemsDetails = () => {
   const { order, loading, error } = useSelector((state) => state.order);
   const { id } = useParams();
   const dispatch = useDispatch();
@@ -112,11 +112,9 @@ const OrderItemsDetails = ({ isSidebarOpen, setIsSidebarOpen }) => {
   return (
     <Fragment>
       <div className="main">
-        <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+        <FloatingSidebar />
         <div
-          className={`flex-1 w-full transition-all duration-300 ${
-            isSidebarOpen ? "menu-homeopen" : "menu-home"
-          }`}
+          className={`flex-1 w-full transition-all duration-300`}
         >
           <div className="container mx-auto p-4 pt-6 md:p-6 lg:p-8">
             <button

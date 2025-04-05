@@ -6,6 +6,7 @@ import { clearCart, updateQuantity, removeFromCart } from "../Redux/Slices/cartS
 import { toast } from "react-toastify";
 import { FaPlus, FaMinus, FaTrash } from "react-icons/fa";
 import EmptyCart from "../../assets/Empty-bro.svg";
+import FloatingSidebar from "../Layout/FloatingSidebar";
 
 const Cart = () => {
   const dispatch = useDispatch();
@@ -64,6 +65,7 @@ const Cart = () => {
   return (
     <Fragment>
     <div className="wrapperCart">
+      <FloatingSidebar />
       <div className="w-full mx-auto p-6">
         <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Your Cart</h1>
         {cartWithDetails.length === 0 ? (
