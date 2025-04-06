@@ -36,7 +36,7 @@ exports.createMenuItem = async (req, res, next) => {
             menuItem,
         });
     } catch (error) {
-        console.error("Error creating menu item:", error);
+        // console.error("Error creating menu item:", error);
         next(new ErrorHandler(500, "Menu item creation failed"));
     }
 };
@@ -83,7 +83,7 @@ exports.deleteMenuItem = async (req, res, next) => {
             message: "Menu item deleted successfully",
         });
     } catch (error) {
-        console.error("Error deleting menu item:", error);
+        // console.error("Error deleting menu item:", error);
         next(new ErrorHandler(500, "Menu item deletion failed"));
     }
 }
@@ -141,7 +141,7 @@ exports.getMenuItems = async (req, res, next) => {
             menuItems,
         });
     } catch (error) {
-        console.error("Error fetching menu items:", error);
+        // console.error("Error fetching menu items:", error);
         next(new ErrorHandler(500, "Menu item fetch failed"));
     }
 };
@@ -159,7 +159,7 @@ exports.getMenuItem = async (req, res, next) => {
             menuItem
         })
     } catch (error) {
-        console.error("Error fetching menu item:", error);
+        // console.error("Error fetching menu item:", error);
         next(new ErrorHandler(500, "Menu item fetch failed"));
     }
 }

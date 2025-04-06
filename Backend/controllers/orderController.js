@@ -57,7 +57,7 @@ exports.placeOrder = async (req, res, next) => {
             order,
         });
     } catch (error) {
-        console.error("Error placing order:", error);
+        // console.error("Error placing order:", error);
         next(new errorHandler(500, "Failed to place order"));
     }
 };
@@ -126,7 +126,7 @@ exports.getAllOrders = async (req, res, next) => {
             orders,
         });
     } catch (error) {
-        console.error("Error fetching orders:", error);
+        // console.error("Error fetching orders:", error);
         next(errorHandler(500, "Failed to retrieve orders"));
     }
 };
@@ -141,7 +141,7 @@ exports.getOrderById = async (req, res, next) => {
         }
         res.json(order);
     } catch (error) {
-        console.error("Error fetching order:", error);
+        // console.error("Error fetching order:", error);
         next(new errorHandler(500, "Failed to fetch order"));
     }
 }
@@ -183,7 +183,7 @@ exports.updateOrderStatus = async (req, res, next) => {
 
         res.json(updatedOrder);
     } catch (error) {
-        console.error("Error updating order status:", error);
+        // console.error("Error updating order status:", error);
         next(new errorHandler(500, "Failed to update order status"));
     }
 };
@@ -260,7 +260,7 @@ exports.addToOrder = async (req, res, next) => {
             order,
         });
     } catch (error) {
-        console.error("Error adding to order:", error);
+        // console.error("Error adding to order:", error);
         next(new errorHandler(500, "Failed to add items to order"));
     }
 };

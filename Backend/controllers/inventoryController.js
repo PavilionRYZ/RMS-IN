@@ -89,7 +89,7 @@ exports.addStock = async (req, res, next) => {
       inventoryItem
     });
   } catch (error) {
-    console.error("Error adding stock:", error);
+    // console.error("Error adding stock:", error);
     next(new errorHandler(500, "Failed to add stock"));
   }
 };
@@ -139,7 +139,7 @@ exports.useStock = async (req, res, next) => {
       inventoryItem
     });
   } catch (error) {
-    console.error("Error using stock:", error);
+    // console.error("Error using stock:", error);
     next(new errorHandler(500, "Failed to use stock"));
   }
 };
@@ -160,7 +160,7 @@ exports.getInventoryItemDetails = async (req, res, next) => {
       transactionHistory: inventoryItem.transactions
     });
   } catch (error) {
-    console.error("Error fetching inventory details:", error);
+    // console.error("Error fetching inventory details:", error);
     next(new errorHandler(500, "Failed to fetch inventory details"));
   }
 };
@@ -209,7 +209,7 @@ exports.getAllInventoryItems = async (req, res, next) => {
       inventoryItems
     });
   } catch (error) {
-    console.error("Error fetching inventory items:", error);
+    // console.error("Error fetching inventory items:", error);
     next(new errorHandler(500, "Failed to fetch inventory items"));
   }
 };
@@ -224,7 +224,7 @@ exports.deleteInventoryItem = async (req, res, next) => {
     }
     res.status(200).json({ success: true, message: "Inventory item deleted successfully" });
   } catch (error) {
-    console.error("Error deleting inventory item:", error);
+    // console.error("Error deleting inventory item:", error);
     next(new errorHandler(500, "Failed to delete inventory item"));
   }
 };

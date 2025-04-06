@@ -53,7 +53,7 @@ const AnalyticsDashboard = () => {
   };
 
   // Debug data
-  console.log('Analytics Data:', data);
+  // console.log('Analytics Data:', data);
 
   // Export functions
   const exportToJSON = () => {

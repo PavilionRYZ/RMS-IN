@@ -33,7 +33,7 @@ exports.markAttendance = async (req, res, next) => {
             attendance: populatedAttendance,
         });
     } catch (error) {
-        console.error("Error marking attendance:", error);
+        // console.error("Error marking attendance:", error);
         next(new errorHandler(500, "Failed to mark attendance"));
     }
 };
@@ -61,7 +61,7 @@ exports.getAttendanceRecords = async (req, res, next) => {
             attendanceRecords,
         });
     } catch (error) {
-        console.error("Error fetching attendance records:", error);
+        // console.error("Error fetching attendance records:", error);
         next(new errorHandler(500, "Failed to fetch attendance records"));
     }
 };
@@ -106,7 +106,7 @@ exports.createSalaryRecord = async (req, res, next) => {
             salaryRecord: populatedSalaryRecord,
         });
     } catch (error) {
-        console.error("Error creating salary record:", error);
+        // console.error("Error creating salary record:", error);
         next(new errorHandler(500, "Failed to create salary record"));
     }
 };
@@ -131,7 +131,7 @@ exports.markSalaryPaid = async (req, res, next) => {
             salaryRecord,
         });
     } catch (error) {
-        console.error("Error marking salary as paid:", error);
+        // console.error("Error marking salary as paid:", error);
         next(new errorHandler(500, "Failed to mark salary as paid"));
     }
 };
@@ -154,7 +154,7 @@ exports.getSalaryRecords = async (req, res, next) => {
             salaryRecords,
         });
     } catch (error) {
-        console.error("Error fetching salary records:", error);
+        // console.error("Error fetching salary records:", error);
         next(new errorHandler(500, "Failed to fetch salary records"));
     }
 };

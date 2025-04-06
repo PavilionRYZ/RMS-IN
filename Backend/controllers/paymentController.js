@@ -77,7 +77,7 @@ exports.createPayment = async (req, res, next) => {
   
       res.status(201).json({ success: true, message: "Payment created and linked to order successfully", payment });
     } catch (error) {
-      console.error("Error creating payment:", error);
+      // console.error("Error creating payment:", error);
       next(new errorHandler(500, "Failed to create payment"));
     }
   };
@@ -117,7 +117,7 @@ exports.updatePaymentStatus = async (req, res, next) => {
   
       res.status(200).json({ success: true, message: "Payment updated", payment });
     } catch (error) {
-      console.error("Error updating payment:", error);
+      // console.error("Error updating payment:", error);
       next(new errorHandler(500, "Failed to update payment"));
     }
   };
@@ -138,7 +138,7 @@ exports.getPaymentsByOrder = async (req, res, next) => {
 
         res.status(200).json({ success: true, count: payments.length, payments });
     } catch (error) {
-        console.error("Error fetching payments:", error);
+        // console.error("Error fetching payments:", error);
         next(new errorHandler(500, "Failed to fetch payments"));
     }
 };
@@ -166,7 +166,7 @@ exports.refundPayment = async (req, res) => {
 
         res.status(200).json({ success: true, message: "Payment refunded successfully", payment });
     } catch (error) {
-        console.error("Error refunding payment:", error);
+        // console.error("Error refunding payment:", error);
         next(new errorHandler(500, "Failed to refund payment"));
     }
 };

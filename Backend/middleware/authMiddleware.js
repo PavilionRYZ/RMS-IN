@@ -21,7 +21,7 @@ exports.verifyAdmin = async (req, res, next) => {
 
         next(); // Proceed to the next middleware or controller
     } catch (error) {
-        console.error(error);
+        // console.error(error);
         res.status(401).json({ message: "Invalid token, authorization denied" });
     }
 };
@@ -43,7 +43,7 @@ exports.verifyToken = async (req, res, next) => {
 
         next(); // Proceed to the next middleware or controller
     } catch (error) {
-        console.error(error);
+        // console.error(error);
         res.status(401).json({ message: "Invalid token, authorization denied" });
     }
 };
@@ -66,7 +66,7 @@ exports.checkAdminOrPermission = (requiredPermission) => {
             return res.status(403).json({ success: false, message: "Access Denied: You don't have permission to manage inventory" });
 
         } catch (error) {
-            console.error("Authorization error:", error);
+            // console.error("Authorization error:", error);
             return res.status(500).json({ success: false, message: "Internal Server Error" });
         }
     };

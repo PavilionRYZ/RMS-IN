@@ -102,7 +102,7 @@ exports.createUser = async (req, res, next) => {
       },
     });
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     next(new errorHandler(500, "User Creation Failed"));
   }
 };
@@ -132,7 +132,7 @@ exports.loginUser = async (req, res, next) => {
     // Send response
     sendResponseWithToken(user, res);
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     next(new errorHandler(500, "User Login Failed"));
   }
 };
@@ -218,7 +218,7 @@ exports.updateUser = async (req, res, next) => {
       },
     });
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     next(errorHandler(500, "Failed to update user credentials"));
   }
 };
@@ -233,7 +233,7 @@ exports.getAllUsers = async (req, res, next) => {
         users
       });
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     next(errorHandler(500, "Failed to get users"));
 
   }
@@ -291,7 +291,7 @@ exports.updateUserCredentials = async (req, res, next) => {
       },
     });
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     next(errorHandler(500, "User update failed"));
   }
 };
@@ -300,11 +300,11 @@ exports.updateUserCredentials = async (req, res, next) => {
 exports.deleteUser = async (req, res, next) => {
   try {
     const userId = req.params.id;
-    console.log(userId);
+    // console.log(userId);
     await User.findByIdAndDelete(userId);
     res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     next(errorHandler(500, "Failed to delete user"));
   }
 }
@@ -367,7 +367,7 @@ exports.forgotPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Forgot password error:", error);
+    // console.error("Forgot password error:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -411,7 +411,7 @@ exports.verifyOTP = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("OTP verification error:", error);
+    // console.error("OTP verification error:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -457,7 +457,7 @@ exports.resetPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Password reset error:", error);
+    // console.error("Password reset error:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",

@@ -36,7 +36,7 @@ exports.addToCart = async (req, res, next) => {
 
         res.status(200).json({ success: true, message: "Item added to cart", cart });
     } catch (error) {
-        console.error("Error adding to cart:", error);
+        // console.error("Error adding to cart:", error);
         next(new errorHandler(500, "Failed to add item to cart"));
     }
 };
@@ -53,7 +53,7 @@ exports.getCart = async (req, res, next) => {
 
         res.status(200).json({ success: true, cart });
     } catch (error) {
-        console.error("Error fetching cart:", error);
+        // console.error("Error fetching cart:", error);
         next(new errorHandler(500, "Failed to fetch cart"));
     }
 };
@@ -89,7 +89,7 @@ exports.updateCartItem = async (req, res, next) => {
 
         res.status(200).json({ success: true, message: "Cart updated", cart });
     } catch (error) {
-        console.error("Error updating cart:", error);
+        // console.error("Error updating cart:", error);
         next(new errorHandler(500, "Failed to update cart"));
     }
 };
@@ -124,7 +124,7 @@ exports.removeFromCart = async (req, res, next) => {
 
         res.status(200).json({ success: true, message: "Item removed from cart", cart });
     } catch (error) {
-        console.error("Error removing from cart:", error);
+        // console.error("Error removing from cart:", error);
         next(new errorHandler(500, "Failed to remove item from cart"));
     }
 };
@@ -137,7 +137,7 @@ exports.clearCart = async (req, res, next) => {
 
         res.status(200).json({ success: true, message: "Cart cleared" });
     } catch (error) {
-        console.error("Error clearing cart:", error);
+        // console.error("Error clearing cart:", error);
         next(new errorHandler(500, "Failed to clear cart"));
     }
 };

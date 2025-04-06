@@ -36,18 +36,6 @@ import ResetPassword from './components/Pages/ResetPassword';
 const App = () => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-  // const dispatch = useDispatch();
-  // const navigate = useNavigate();
-
-  // useEffect(() => {
-  //   const token = Cookies.get('token');
-  //   if (!token) {
-  //     dispatch(clearCookies());
-  //     dispatch(resetUserState());
-  //     dispatch(clearOrderState());
-  //     navigate('/login');
-  //   }
-  // })
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <div className="flex-1">
