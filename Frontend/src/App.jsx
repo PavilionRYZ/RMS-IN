@@ -1,13 +1,13 @@
 /* eslint-disable no-unused-vars */
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { useEffect, useState } from 'react';
+// import { useEffect, useState } from 'react';
 // import Cookies from "js-cookie";
 import LoginPage from './components/Auth/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 // import AdminDashboard from './components/Pages/AdminDashboard';
 import StaffDashboard from './components/Pages/StaffDashboard';
-import CustomerDashboard from './components/Pages/CustomerDashboard';
+// import CustomerDashboard from './components/Pages/CustomerDashboard';
 import MenuManagement from './components/Pages/MenuManagement';
 import HomePage from './components/Pages/HomePage';
 import NotAuthorized from './components/Pages/NotAuthorized';
@@ -17,10 +17,10 @@ import { Fragment } from 'react';
 import ManageOrders from './components/Pages/ManageOrders';
 import ManageInventory from './components/Pages/ManageInventory';
 import ManageStaff from './components/Pages/ManageStaff';
-import ManageCustomers from './components/Pages/ManageCustomers';
-import Reservations from './components/Pages/Reservations';
+// import ManageCustomers from './components/Pages/ManageCustomers';
+import ManageReservations from './components/Pages/ManageReservations';
 import ManagePayments from './components/Pages/ManagePayments';
-import Reports from './components/Pages/Reports';
+// import Reports from './components/Pages/Reports';
 import Analytics from './components/Pages/Analytics';
 import ViewOrderDetails from './components/Pages/ViewOrderDetails';
 import Cart from "./components/Pages/Cart";
@@ -53,7 +53,7 @@ const App = () => {
               <Route path="/manage-staff" element={<ProtectedRoute roles={['admin']}><ManageStaff  /></ProtectedRoute>} />
               <Route path="/manage-staff-payments" element={<ProtectedRoute><ManageStaffPayments roles={['admin']}/></ProtectedRoute>} />
               {/* <Route path="/manage-customers" element={<ProtectedRoute permissions={['manage_customers']}><ManageCustomers  /></ProtectedRoute>} /> */}
-              <Route path="/reservations" element={<ProtectedRoute permissions={['manage_reservations']}><Reservations  /></ProtectedRoute>} />
+              <Route path="/reservations" element={<ProtectedRoute permissions={['manage_reservations']}><ManageReservations  /></ProtectedRoute>} />
               <Route path="/payment-manage" element={<ProtectedRoute permissions={['manage_payments']}><ManagePayments  /></ProtectedRoute>} />
               {/* <Route path="/reports" element={<ProtectedRoute permissions={['view_reports']}><Reports  /></ProtectedRoute>} /> */}
               <Route path="/analytics" element={<ProtectedRoute permissions={['analytics_management']}><Analytics  /></ProtectedRoute>} />

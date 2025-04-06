@@ -20,6 +20,7 @@ import paymentReducer from "./Slices/paymentSlice";
 import inventoryReducer from "./Slices/inventorySlice";
 import analyticsReducer from "./Slices/analyticsSlice";
 import staffManagementReducer from "./Slices/staffManagementSlice";
+import reservationReducer from "./Slices/reservationSlice";
 
 const persistConfig = {
     key: 'root',
@@ -30,13 +31,14 @@ const persistConfig = {
 const rootReducer = combineReducers({
     auth: authReducer,
     menu: menuReducer,
-    order: orderReducer, 
+    order: orderReducer,
     user: userReducer,
     cart: cartReducer,
     payment: paymentReducer,
     inventory: inventoryReducer,
     analytics: analyticsReducer,
     staffManagement: staffManagementReducer,
+    reservation: reservationReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

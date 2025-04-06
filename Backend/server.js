@@ -35,6 +35,7 @@ const inventoryRoute = require('./routes/inventoryRoute');
 const analysisRoute = require('./routes/analysisRoute');
 const paymentRoute = require('./routes/paymentRoute');
 const staffManagementRoute = require('./routes/staffManagementRoute');
+const reservationRoute = require('./routes/reservationRoute');
 
 
 // Middleware to parse JSON requests
@@ -47,6 +48,7 @@ app.use("/api/v1", inventoryRoute);
 app.use("/api/v1", analysisRoute);
 app.use("/api/v1", paymentRoute);
 app.use("/api/v1", staffManagementRoute);
+app.use("/api/v1", reservationRoute);
 
 
 //Global Error handling middleware
