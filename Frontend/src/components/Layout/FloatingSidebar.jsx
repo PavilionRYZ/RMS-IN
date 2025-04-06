@@ -1,6 +1,5 @@
 /* eslint-disable no-unused-vars */
 import { useState } from "react";
-import PropTypes from "prop-types";
 import { FaBars, FaHome, FaTimes, FaTachometerAlt, FaShoppingCart, FaCalendarAlt, FaBox, FaCogs, FaChartBar, FaEnvelope, FaSignOutAlt, FaUsers } from "react-icons/fa";
 import { MdOutlineMenuBook,MdPayments ,MdOutlinePayments  } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
@@ -204,7 +203,5 @@ const FloatingSidebar = () => {
     </div>
   );
 };
-
-FloatingSidebar.propTypes = {};
 
 export default FloatingSidebar;
