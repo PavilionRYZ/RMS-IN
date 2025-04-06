@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   server: {
     proxy: {
-      '/api': 'https://restomaster-backend.onrender.com'
+      '/api': 'http://localhost:5000'
     }
   },
   plugins: [

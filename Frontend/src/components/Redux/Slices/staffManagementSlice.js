@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+const API_URL = `${import.meta.env.VITE_API_URL}/api/v1`; // Adjust this based on your backend URL
 
 const initialState = {
     attendanceRecords: [],
@@ -13,7 +14,7 @@ export const markAttendance = createAsyncThunk(
     "staffManagement/markAttendance",
     async (attendanceData, thunkAPI) => {
         try {
-            const response = await axios.post("/api/v1/attendance/mark", attendanceData);
+            const response = await axios.post(`${API_URL}/attendance/mark`, attendanceData);
             return response.data.attendance;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);
@@ -26,7 +27,7 @@ export const getAttendanceRecords = createAsyncThunk(
     "staffManagement/getAttendanceRecords",
     async (params, thunkAPI) => {
         try {
-            const response = await axios.get("/api/v1/attendance", { params });
+            const response = await axios.get(`${API_URL}/attendance`, { params });
             return response.data.attendanceRecords;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);
@@ -39,7 +40,7 @@ export const createSalaryRecord = createAsyncThunk(
     "staffManagement/createSalaryRecord",
     async (salaryData, thunkAPI) => {
         try {
-            const response = await axios.post("/api/v1/salary/create", salaryData);
+            const response = await axios.post(`${API_URL}/salary/create`, salaryData);
             return response.data.salaryRecord;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);
@@ -52,7 +53,7 @@ export const markSalaryPaid = createAsyncThunk(
     "staffManagement/markSalaryPaid",
     async (salaryRecordId, thunkAPI) => {
         try {
-            const response = await axios.patch(`/api/v1/salary/paid/${salaryRecordId}`);
+            const response = await axios.patch(`${API_URL}/salary/paid/${salaryRecordId}`);
             return response.data.salaryRecord;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);
@@ -65,7 +66,7 @@ export const getSalaryRecords = createAsyncThunk(
     "staffManagement/getSalaryRecords",
     async (params, thunkAPI) => {
         try {
-            const response = await axios.get("/api/v1/salary", { params });
+            const response = await axios.get(`${API_URL}/salary`, { params });
             return response.data.salaryRecords;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);

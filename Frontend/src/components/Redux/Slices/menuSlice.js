@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+const API_URL = `${import.meta.env.VITE_API_URL}/api/v1`; // Adjust this based on your backend URL
 
 const initialState = {
     menu: [],
@@ -12,7 +13,7 @@ export const getMenuItems = createAsyncThunk(
     "menu/getMenuItems",
     async (_, thunkAPI) => {
         try {
-            const response = await axios.get("/api/v1/get/all/menu/items");
+            const response = await axios.get(`${API_URL}/get/all/menu/items`);
             return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);
@@ -23,7 +24,7 @@ export const getMenuItems = createAsyncThunk(
 export const getMenuItem = createAsyncThunk("menu/getMenuItemById",
     async (id, thunkAPI) => {
         try {
-            const response = await axios.get(`/api/v1/get/menu/item/${id}`);
+            const response = await axios.get(`${API_URL}/get/menu/item/${id}`);
             return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);
@@ -34,7 +35,7 @@ export const getMenuItem = createAsyncThunk("menu/getMenuItemById",
 export const editMenuItem = createAsyncThunk("menu/editMenuItem",
     async (menuItem, thunkAPI) => {
         try {
-            const response = await axios.patch(`/api/v1/edit/menu/item/${menuItem._id}`, menuItem);
+            const response = await axios.patch(`${API_URL}/edit/menu/item/${menuItem._id}`, menuItem);
             return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);
@@ -45,7 +46,7 @@ export const editMenuItem = createAsyncThunk("menu/editMenuItem",
 export const deleteMenuItem = createAsyncThunk("menu/deleteMenuItem",
     async (id, thunkAPI) => {
         try {
-            const response = await axios.delete(`/api/v1/delete/menu/item/${id}`);
+            const response = await axios.delete(`${API_URL}/delete/menu/item/${id}`);
             return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);
@@ -56,7 +57,7 @@ export const deleteMenuItem = createAsyncThunk("menu/deleteMenuItem",
 export const createMenuItem = createAsyncThunk("menu/createMenuItem",
     async (menuItem, thunkAPI) => {
         try {
-            const response = await axios.post("/api/v1/create/menu/item", menuItem);
+            const response = await axios.post(`${API_URL}/create/menu/item`, menuItem);
             return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);

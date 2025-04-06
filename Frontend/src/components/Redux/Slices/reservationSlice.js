@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+const API_URL = `${import.meta.env.VITE_API_URL}/api/v1`; // Adjust this based on your backend URL
 
 const initialState = {
     reservations: [],
@@ -12,7 +13,7 @@ export const createReservation = createAsyncThunk(
     "reservation/createReservation",
     async (reservationData, thunkAPI) => {
         try {
-            const response = await axios.post("/api/v1/reservations", reservationData);
+            const response = await axios.post(`${API_URL}/reservations`, reservationData);
             return response.data.reservation;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data.message || "Failed to create reservation");
@@ -25,7 +26,7 @@ export const updateReservation = createAsyncThunk(
     "reservation/updateReservation",
     async ({ reservationId, updateData }, thunkAPI) => {
         try {
-            const response = await axios.patch(`/api/v1/reservations/${reservationId}`, updateData);
+            const response = await axios.patch(`${API_URL}/reservations/${reservationId}`, updateData);
             return response.data.reservation;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data.message || "Failed to update reservation");
@@ -38,7 +39,7 @@ export const cancelReservation = createAsyncThunk(
     "reservation/cancelReservation",
     async (reservationId, thunkAPI) => {
         try {
-            const response = await axios.delete(`/api/v1/reservations/${reservationId}`);
+            const response = await axios.delete(`${API_URL}/reservations/${reservationId}`);
             return response.data.reservation;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data.message || "Failed to cancel reservation");
@@ -51,7 +52,7 @@ export const getAllReservations = createAsyncThunk(
     "reservation/getAllReservations",
     async (params, thunkAPI) => {
         try {
-            const response = await axios.get("/api/v1/reservations/all", { params });
+            const response = await axios.get(`${API_URL}/reservations/all`, { params });
             return response.data.reservations;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data.message || "Failed to fetch reservations");
@@ -64,7 +65,7 @@ export const getReservationsByCustomerName = createAsyncThunk(
     "reservation/getReservationsByCustomerName",
     async (params, thunkAPI) => {
         try {
-            const response = await axios.get("/api/v1/reservations/customer", { params });
+            const response = await axios.get(`${API_URL}/reservations/customer`, { params });
             return response.data.reservations;
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data.message || "Failed to fetch reservations");

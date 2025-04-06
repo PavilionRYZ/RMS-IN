@@ -1,12 +1,13 @@
 // src/redux/slices/analyticsSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+const API_URL = `${import.meta.env.VITE_API_URL}/api/v1`; // Adjust this based on your backend URL
 
 export const fetchAnalytics = createAsyncThunk(
     'analytics/fetchAnalytics',
     async ({ period, startDate, endDate }, { rejectWithValue }) => {
         try {
-            const response = await axios.get('/api/v1/analytics', {
+            const response = await axios.get(`${API_URL}/analytics`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
                 params: { period, startDate, endDate }
             });
@@ -21,7 +22,7 @@ export const generateAnalytics = createAsyncThunk(
     'analytics/generateAnalytics',
     async ({ period, startDate, endDate }, { rejectWithValue }) => {
         try {
-            const response = await axios.post('/api/v1/generate-analytics',
+            const response = await axios.post(`${API_URL}/generate-analytics`,
                 { period, startDate, endDate },
                 { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
             );

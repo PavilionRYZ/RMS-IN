@@ -2,7 +2,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 // API Base URL (Adjust this based on your backend setup)
-const API_URL = "/api/v1/order";
+const API_URL = `${import.meta.env.VITE_API_URL}/api/v1/order`; // Adjust this based on your backend URL
+
 
 // Async Thunk to Place an Order
 export const placeOrder = createAsyncThunk(

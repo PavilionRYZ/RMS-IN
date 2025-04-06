@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+const API_URL = `${import.meta.env.VITE_API_URL}/api/v1`; // Adjust this based on your backend URL
 
 const initialState = {
   inventory: {
@@ -17,7 +18,7 @@ export const createInventoryItem = createAsyncThunk(
   "inventory/createInventoryItem",
   async (item, thunkAPI) => {
     try {
-      const response = await axios.post("/api/v1/inventory/create", item);
+      const response = await axios.post(`${API_URL}/inventory/create`, item);
       return response.data.inventoryItem;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response.data);
@@ -29,7 +30,7 @@ export const getInventoryItems = createAsyncThunk(
   "inventory/getInventoryItems",
   async (params, thunkAPI) => {
     try {
-      const response = await axios.get("/api/v1/inventory/items", { params });
+      const response = await axios.get(`${API_URL}/inventory/items`, { params });
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response.data);
@@ -41,7 +42,7 @@ export const getInventoryItemDetails = createAsyncThunk(
   "inventory/getInventoryItemDetails",
   async (itemId, thunkAPI) => {
     try {
-      const response = await axios.get(`/api/v1/inventory/item/${itemId}`);
+      const response = await axios.get(`${API_URL}/inventory/item/${itemId}`);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response.data);
@@ -53,7 +54,7 @@ export const addStock = createAsyncThunk(
   "inventory/addStock",
   async (item, thunkAPI) => {
     try {
-      const response = await axios.post("/api/v1/inventory/add-stock", item);
+      const response = await axios.post(`${API_URL}/inventory/add-stock`, item);
       return response.data.inventoryItem;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response.data);
@@ -65,7 +66,7 @@ export const stockUse = createAsyncThunk(
   "inventory/useStock",
   async (item, thunkAPI) => {
     try {
-      const response = await axios.post("/api/v1/inventory/use-stock", item);
+      const response = await axios.post(`${API_URL}/inventory/use-stock`, item);
       return response.data.inventoryItem;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response.data);
@@ -77,7 +78,7 @@ export const deleteInventoryItem = createAsyncThunk(
   "inventory/deleteInventoryItem",
   async (itemId, thunkAPI) => {
     try {
-      const response = await axios.delete(`/api/v1/inventory/item/delete/${itemId}`);
+      const response = await axios.delete(`${API_URL}/inventory/item/delete/${itemId}`);
       return { _id: itemId, message: response.data.message };
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response.data);
