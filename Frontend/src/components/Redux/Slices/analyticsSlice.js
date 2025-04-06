@@ -1,79 +1,89 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+// src/redux/slices/analyticsSlice.js
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
 
-const initialState = {
-    analytics: [],
-    loading: false,
-    error: null,
-};
-
-export const getAnalytics = createAsyncThunk(
-    "analytics/getAnalytics",
-    async ({ startDate, endDate, type }, thunkAPI) => {
+export const fetchAnalytics = createAsyncThunk(
+    'analytics/fetchAnalytics',
+    async ({ period, startDate, endDate }, { rejectWithValue }) => {
         try {
-            const response = await axios.get("/api/v1/analytics", {
-                params: { startDate, endDate, type },
+            const response = await axios.get('/api/v1/analytics', {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                params: { period, startDate, endDate }
             });
-            return response.data.analytics;
+            return response.data.data[0];
         } catch (error) {
-            return thunkAPI.rejectWithValue(error.response.data);
+            return rejectWithValue(error.response.data);
         }
     }
 );
 
-export const computeDailyAnalytics = createAsyncThunk(
-    "analytics/computeDailyAnalytics",// identifier
-    async ({ date }, thunkAPI) => {
+export const generateAnalytics = createAsyncThunk(
+    'analytics/generateAnalytics',
+    async ({ period, startDate, endDate }, { rejectWithValue }) => {
         try {
-            const response = await axios.get("/api/v1/analytics/daily", {
-                params: { date },
-            });
-            return response.data.analytics;
+            const response = await axios.post('/api/v1/generate-analytics',
+                { period, startDate, endDate },
+                { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+            );
+            return response.data.data;
         } catch (error) {
-            return thunkAPI.rejectWithValue(error.response.data);
+            return rejectWithValue(error.response.data);
         }
     }
 );
 
 const analyticsSlice = createSlice({
-    name: "analytics",
-    initialState,
+    name: 'analytics',
+    initialState: {
+        data: null,
+        period: 'monthly',
+        startDate: '',
+        endDate: '',
+        loading: false,
+        error: null,
+    },
     reducers: {
-        clearAnalyticsState: (state) => {
-            state.analytics = [];
-            state.loading = false;
+        setPeriod: (state, action) => {
+            state.period = action.payload;
+        },
+        setStartDate: (state, action) => {
+            state.startDate = action.payload;
+        },
+        setEndDate: (state, action) => {
+            state.endDate = action.payload;
+        },
+        clearError: (state) => {
             state.error = null;
         },
     },
     extraReducers: (builder) => {
         builder
-            .addCase(getAnalytics.pending, (state) => {
+            .addCase(fetchAnalytics.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getAnalytics.fulfilled, (state, action) => {
+            .addCase(fetchAnalytics.fulfilled, (state, action) => {
                 state.loading = false;
-                state.analytics = action.payload;
+                state.data = action.payload;
             })
-            .addCase(getAnalytics.rejected, (state, action) => {
+            .addCase(fetchAnalytics.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload;
+                state.error = action.payload?.message || 'Failed to fetch analytics';
             })
-            // computeDailyAnalytics
-            .addCase(computeDailyAnalytics.pending, (state) => {
+            .addCase(generateAnalytics.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(computeDailyAnalytics.fulfilled, (state, action) => {
+            .addCase(generateAnalytics.fulfilled, (state, action) => {
                 state.loading = false;
-                state.analytics = action.payload;
+                state.data = action.payload;
             })
-            .addCase(computeDailyAnalytics.rejected, (state, action) => {
+            .addCase(generateAnalytics.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload;
+                state.error = action.payload?.message || 'Failed to generate analytics';
             });
     },
 });
 
-export const { clearAnalyticsState } = analyticsSlice.actions;
+export const { setPeriod, setStartDate, setEndDate, clearError } = analyticsSlice.actions;
 export default analyticsSlice.reducer;

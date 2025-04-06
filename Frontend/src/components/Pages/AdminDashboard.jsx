@@ -3,9 +3,9 @@ import { Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import Sidebar from '../Layout/Sidebar';
-import PropTypes from 'prop-types';
 
-const AdminDashboard = ({ isSidebarOpen, setIsSidebarOpen }) => {
+
+const AdminDashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const [imagePreview, setImagePreview] = useState(
     user?.image || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
@@ -17,14 +17,12 @@ const AdminDashboard = ({ isSidebarOpen, setIsSidebarOpen }) => {
       <div className="min-h-screen flex bg-gradient-to-br from-gray-100 to-gray-200">
         {/* Sidebar */}
         <div className="left-side-navigation">
-          <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+          <Sidebar />
         </div>
 
         {/* Main Content */}
         <div
-          className={`flex-1 transition-all duration-300 p-6 md:p-10 ${
-            isSidebarOpen ? "menu-homeopen" : "menu-home"
-          }`}
+          className={`flex-1 transition-all duration-300 p-6 md:p-10`}
         >
           {/* Header */}
           <header className="mb-8 flex flex-col md:flex-row justify-between items-center">
@@ -246,11 +244,6 @@ const AdminDashboard = ({ isSidebarOpen, setIsSidebarOpen }) => {
       </div>
     </Fragment>
   );
-};
-
-AdminDashboard.propTypes = {
-  isSidebarOpen: PropTypes.bool.isRequired,
-  setIsSidebarOpen: PropTypes.func.isRequired,
 };
 
 export default AdminDashboard;

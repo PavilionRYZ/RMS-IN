@@ -21,7 +21,7 @@ const navLinks = [
   { to: "/manage-staff", label: "Manage Staff", icon: FaUsers, permission: "manage_staff", role: "admin" },
   { to: "/manage-staff-payments", label: "Manage Salary", icon: MdOutlinePayments , role: "admin" },
   { to: "/payment-manage", label: "Payment Manage", icon: MdPayments , permission: "manage_payments" },
-  { to: "/reports", label: "Report", icon: FaChartBar, permission: "view_reports" },
+  // { to: "/reports", label: "Report", icon: FaChartBar, permission: "view_reports" },
   { to: "/analytics", label: "Analytics", icon: FaChartBar, permission: "analytics_management" },
 
 ];

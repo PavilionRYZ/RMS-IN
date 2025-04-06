@@ -152,7 +152,8 @@ const HomePage = () => {
                 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-10 md:mb-12 sm:mb-12 text-gray-800"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
+                transition={{ duration: 0.8, delay: 0.2 }} 
+                style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",marginBottom: "2rem" }}
               >
                 Explore Our <span className="text-amber-600">Menu</span>
               </motion.h2>
@@ -234,6 +235,7 @@ const HomePage = () => {
                   <motion.div
                     key={category}
                     className="mb-12 sm:mb-16"
+                    style={{display: 'flex', flexDirection: 'column', gap:"1rem",marginTop:"1rem" }}
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: index * 0.2 }}

@@ -9,7 +9,6 @@ import { ReloadOutlined } from "@ant-design/icons";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import moment from "moment";
-import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 
 const { Option } = Select;
@@ -522,11 +521,6 @@ const ManagePayments = () => {
       <ToastContainer autoClose={3000} />
     </Fragment>
   );
-};
-
-ManagePayments.propTypes = {
-  isSidebarOpen: PropTypes.bool.isRequired,
-  setIsSidebarOpen: PropTypes.func.isRequired,
 };
 
 export default ManagePayments;

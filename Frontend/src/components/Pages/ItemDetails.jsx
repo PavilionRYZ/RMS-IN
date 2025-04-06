@@ -5,7 +5,7 @@ import { getMenuItem, resetMenuItem } from "../Redux/Slices/menuSlice";
 import { addToCart, updateQuantity } from "../Redux/Slices/cartSlice";
 import { FaShoppingCart, FaPlus, FaMinus, FaArrowLeft } from "react-icons/fa";
 import FloatingSidebar from "../Layout/FloatingSidebar";
-import PropTypes from "prop-types";
+
 
 const ItemDetails = () => {
   const dispatch = useDispatch();
@@ -246,11 +246,6 @@ const ItemDetails = () => {
       </div>
     </Fragment>
   );
-};
-
-ItemDetails.propTypes = {
-  isSidebarOpen: PropTypes.bool.isRequired,
-  setIsSidebarOpen: PropTypes.func.isRequired,
 };
 
 export default ItemDetails;

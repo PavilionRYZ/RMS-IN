@@ -7,7 +7,6 @@ import { ReloadOutlined } from "@ant-design/icons";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import moment from "moment";
-import PropTypes from "prop-types";
 import { motion } from "framer-motion";
 
 const { Option } = Select;
@@ -360,11 +359,6 @@ const ManageOrders = () => {
       <ToastContainer autoClose={3000} />
     </Fragment>
   );
-};
-
-ManageOrders.propTypes = {
-  isSidebarOpen: PropTypes.bool.isRequired,
-  setIsSidebarOpen: PropTypes.func.isRequired,
 };
 
 export default ManageOrders;

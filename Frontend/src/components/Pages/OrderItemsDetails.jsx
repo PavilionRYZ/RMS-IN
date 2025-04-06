@@ -2,7 +2,6 @@
 import { Fragment, useEffect } from "react";
 import FloatingSidebar from "../Layout/FloatingSidebar";
 import { getOrderById, clearOrderState } from "../Redux/Slices/orderSlice";
-import PropTypes from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
@@ -197,11 +196,6 @@ const OrderItemsDetails = () => {
       <ToastContainer />
     </Fragment>
   );
-};
-
-OrderItemsDetails.propTypes = {
-  isSidebarOpen: PropTypes.bool.isRequired,
-  setIsSidebarOpen: PropTypes.func.isRequired,
 };
 
 export default OrderItemsDetails;

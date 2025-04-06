@@ -3,7 +3,6 @@ import { Fragment, useEffect } from "react";
 import FloatingSidebar from "../Layout/FloatingSidebar";
 import { getOrderById, clearOrderState } from "../Redux/Slices/orderSlice";
 import { getPaymentsByOrder, clearPaymentState } from "../Redux/Slices/paymentSlice";
-import PropTypes from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
@@ -342,11 +341,6 @@ const ViewOrderDetails = () => {
       <ToastContainer />
     </Fragment>
   );
-};
-
-ViewOrderDetails.propTypes = {
-  isSidebarOpen: PropTypes.bool.isRequired,
-  setIsSidebarOpen: PropTypes.func.isRequired,
 };
 
 export default ViewOrderDetails;

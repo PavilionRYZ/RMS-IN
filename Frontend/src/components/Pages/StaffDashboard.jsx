@@ -3,10 +3,10 @@ import { Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import FloatingSidebar from '../Layout/FloatingSidebar';
-import PropTypes from 'prop-types';
+
 import { FaBox, FaChartBar, FaClipboardList, FaFileInvoice, FaMoneyBill, FaUsers, FaUtensils } from 'react-icons/fa';
 
-const StaffDashboard = ({ isSidebarOpen, setIsSidebarOpen }) => {
+const StaffDashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const [imagePreview, setImagePreview] = useState(
     user?.image || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
@@ -39,9 +39,7 @@ const availableActions = quickActions
 
         {/* Main Content */}
         <div
-          className={`flex-1 transition-all duration-300 p-6 md:p-10 ${
-            isSidebarOpen ? "menu-homeopen" : "menu-home"
-          }`}
+          className={`flex-1 transition-all duration-300 p-6 md:p-10`}
         >
           {/* Header */}
           <header className="mb-8 flex flex-col md:flex-row justify-between items-center">
@@ -199,11 +197,6 @@ const availableActions = quickActions
       </div>
     </Fragment>
   );
-};
-
-StaffDashboard.propTypes = {
-  isSidebarOpen: PropTypes.bool.isRequired,
-  setIsSidebarOpen: PropTypes.func.isRequired,
 };
 
 export default StaffDashboard

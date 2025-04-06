@@ -1,420 +1,540 @@
-/* eslint-disable no-unused-vars */
-import { Fragment, useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { getAnalytics, clearAnalyticsState,computeDailyAnalytics } from "../Redux/Slices/analyticsSlice";
-import FloatingSidebar from "../Layout/FloatingSidebar";
-import {
-  Table,
-  Spin,
-  notification,
-  Layout,
-  Typography,
-  Row,
-  Col,
-  Card,
-  DatePicker,
-  Select,
-  Button,
-} from "antd";
-import { FaChartLine } from "react-icons/fa";
-import PropTypes from "prop-types";
-import { motion } from "framer-motion";
-import styled from "styled-components";
-import { Line, Pie, Bar } from "react-chartjs-2";
+// src/components/AnalyticsDashboard.jsx
+import { Fragment, useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { motion } from 'framer-motion';
+import { Bar, Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   BarElement,
-  ArcElement,
   Title,
   Tooltip,
   Legend,
-  Filler
-} from "chart.js";
-import moment from "moment";
+  ArcElement,
+} from 'chart.js';
+import { FiDownload } from 'react-icons/fi';
+import { saveAs } from 'file-saver';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import {
+  fetchAnalytics,
+  generateAnalytics,
+  setPeriod,
+  setStartDate,
+  setEndDate,
+  clearError,
+} from '../Redux/Slices/analyticsSlice';
+import { getMenuItems } from '../Redux/Slices/menuSlice';
+import FloatingSidebar from '../Layout/FloatingSidebar';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
-const { Content } = Layout;
-// Remove this line: const { Title } = Typography;
-const { RangePicker } = DatePicker;
-const { Option } = Select;
-
-// Styled components for custom styling
-const StyledCard = styled(Card)`
-  border-radius: 16px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  background: linear-gradient(135deg, #ffffff, #f9fafb);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-  }
-`;
-
-const StyledTable = styled(Table)`
-  .ant-table-thead > tr > th {
-    background: #faad14;
-    color: white;
-    font-weight: 600;
-    border-bottom: 2px solid #e8ecef;
-  }
-  .ant-table-row {
-    transition: background 0.2s ease;
-    &:hover {
-      background: #fff7e6;
-    }
-  }
-`;
-
-const StyledButton = styled(Button)`
-  border-radius: 8px;
-  padding: 6px 20px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  &:hover {
-    transform: scale(1.05);
-  }
-`;
-
-const Analytics = () => {
+const AnalyticsDashboard = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { analytics, loading, error } = useSelector((state) => state.analytics);
-
-  const [dateRange, setDateRange] = useState([]);
-  const [type, setType] = useState("daily");
+  const { data, period, startDate, endDate, loading: analyticsLoading, error: analyticsError } = useSelector((state) => state.analytics);
+  const { menu, loading: menuLoading, error: menuError } = useSelector((state) => state.menu);
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   useEffect(() => {
-    if (dateRange.length === 2) {
-      dispatch(
-        getAnalytics({
-          startDate: dateRange[0].format("YYYY-MM-DD"),
-          endDate: dateRange[1].format("YYYY-MM-DD"),
-          type,
-        })
-      )
-        .unwrap()
-        .catch((err) => {
-          notification.error({
-            message: "Error",
-            description: err.message || "Failed to fetch analytics",
-            placement: "topRight",
-          });
-        });
+    if (!data && !analyticsLoading) {
+      dispatch(fetchAnalytics({ period, startDate, endDate }));
     }
-  }, [dispatch, dateRange, type]);
+  }, [dispatch, period, startDate, endDate, data, analyticsLoading]);
 
-  const handleFetchAnalytics = () => {
-    if (dateRange.length !== 2) {
-      notification.warning({
-        message: "Warning",
-        description: "Please select a date range",
-        placement: "topRight",
+  useEffect(() => {
+    if (!menu.length && !menuLoading) {
+      dispatch(getMenuItems());
+    }
+  }, [dispatch, menu, menuLoading]);
+
+  const handleGenerateReport = () => {
+    dispatch(generateAnalytics({ period, startDate, endDate }));
+  };
+
+  // Debug data
+  console.log('Analytics Data:', data);
+
+  // Export functions
+  const exportToJSON = () => {
+    if (data) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      saveAs(blob, `analytics-report-${period}-${new Date().toISOString()}.json`);
+    }
+  };
+
+  const exportToExcel = () => {
+    if (data) {
+      const worksheetData = [
+        ['Metric', 'Value'],
+        ['Total Sales', data.totalSales || 0],
+        ['Total Profit', data.totalProfit || 0],
+        ['Total Loss', data.totalLoss || 0],
+        ['Order Types', ''],
+        ['Dine-in', data.orderTypes?.dineIn?.amount || 0],
+        ['Takeaway', data.orderTypes?.takeaway?.amount || 0],
+        ['Online', data.orderTypes?.online?.amount || 0],
+        ['Payment Methods', ''],
+        ['Cash', data.paymentMethods?.cash?.amount || 0],
+        ['Card', data.paymentMethods?.card?.amount || 0],
+        ['Online', data.paymentMethods?.online?.amount || 0],
+        ['Order Status', ''],
+        ['Confirmed', data.orderStatus?.confirmed || 0],
+        ['Cancelled', data.orderStatus?.cancelled || 0],
+        ['Inventory Analysis - Stock', ''],
+        ...(data.inventoryAnalysis?.stock?.map((item, index) => [
+          `${index + 1}. ${item.item?.name || 'Unknown'} (Stock)`,
+          item.currentStock || 0,
+          item.unitCost || 0,
+          item.totalValue || 0,
+        ]) || []),
+        ['Inventory Analysis - Usage', ''],
+        ...(data.inventoryAnalysis?.usage?.map((item, index) => [
+          `${index + 1}. ${item.item?.name || 'Unknown'} (Used)`,
+          item.usedQuantity || 0,
+          item.totalCost || 0,
+        ]) || []),
+        ['Top Selling Items', ''],
+        ...(data.topSellingItems?.map((item, index) => [
+          `${index + 1}. ${menu.find((m) => m._id === (item.item?._id || item._id))?.name || 'Unknown'}`,
+          item.quantity || 0,
+        ]) || []),
+      ];
+
+      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Analytics');
+      XLSX.writeFile(workbook, `analytics-report-${period}-${new Date().toISOString()}.xlsx`);
+    }
+  };
+
+  const exportToPDF = () => {
+    if (data) {
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text('Analytics Report', 20, 20);
+      doc.setFontSize(12);
+
+      let y = 30;
+      doc.text(`Period: ${period}`, 20, y);
+      y += 10;
+      doc.text(`Date Range: ${startDate || 'N/A'} to ${endDate || 'N/A'}`, 20, y);
+      y += 10;
+
+      doc.text('Key Metrics:', 20, y);
+      y += 10;
+      doc.text(`Total Sales: $${(data.totalSales || 0).toFixed(2)}`, 20, y);
+      y += 10;
+      doc.text(`Total Profit: $${(data.totalProfit || 0).toFixed(2)}`, 20, y);
+      y += 10;
+      doc.text(`Total Loss: $${(data.totalLoss || 0).toFixed(2)}`, 20, y);
+      y += 10;
+
+      doc.text('Order Types:', 20, y);
+      y += 10;
+      doc.text(`Dine-in: $${data.orderTypes?.dineIn?.amount || 0}`, 20, y);
+      y += 10;
+      doc.text(`Takeaway: $${data.orderTypes?.takeaway?.amount || 0}`, 20, y);
+      y += 10;
+      doc.text(`Online: $${data.orderTypes?.online?.amount || 0}`, 20, y);
+      y += 10;
+
+      doc.text('Payment Methods:', 20, y);
+      y += 10;
+      doc.text(`Cash: $${data.paymentMethods?.cash?.amount || 0}`, 20, y);
+      y += 10;
+      doc.text(`Card: $${data.paymentMethods?.card?.amount || 0}`, 20, y);
+      y += 10;
+      doc.text(`Online: $${data.paymentMethods?.online?.amount || 0}`, 20, y);
+      y += 10;
+
+      doc.text('Order Status:', 20, y);
+      y += 10;
+      doc.text(`Confirmed: ${data.orderStatus?.confirmed || 0}`, 20, y);
+      y += 10;
+      doc.text(`Cancelled: ${data.orderStatus?.cancelled || 0}`, 20, y);
+      y += 10;
+
+      doc.text('Inventory Analysis - Stock:', 20, y);
+      y += 10;
+      data.inventoryAnalysis?.stock?.forEach((item, index) => {
+        doc.text(
+          `${index + 1}. ${item.item?.name || 'Unknown'}: ${item.currentStock || 0} ($${item.unitCost || 0}/unit, Total: $${item.totalValue || 0})`,
+          20,
+          y
+        );
+        y += 10;
       });
-      return;
+
+      doc.text('Inventory Analysis - Usage:', 20, y);
+      y += 10;
+      data.inventoryAnalysis?.usage?.forEach((item, index) => {
+        doc.text(
+          `${index + 1}. ${item.item?.name || 'Unknown'}: ${item.usedQuantity || 0} (Total Cost: $${item.totalCost || 0})`,
+          20,
+          y
+        );
+        y += 10;
+      });
+
+      doc.text('Top Selling Items:', 20, y);
+      y += 10;
+      data.topSellingItems?.forEach((item, index) => {
+        const name = menu.find((m) => m._id === (item.item?._id || item._id))?.name || 'Unknown';
+        doc.text(`${index + 1}. ${name}: ${item.quantity || 0}`, 20, y);
+        y += 10;
+      });
+
+      doc.save(`analytics-report-${period}-${new Date().toISOString()}.pdf`);
     }
-    dispatch(
-      getAnalytics({
-        startDate: dateRange[0].format("YYYY-MM-DD"),
-        endDate: dateRange[1].format("YYYY-MM-DD"),
-        type,
-      })
-    );
   };
 
-  if (loading) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
-        <Spin size="large" tip="Loading analytics..." />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}
-      >
-        <StyledCard>
-          <p style={{ color: "#ff4d4f", fontSize: "18px", marginBottom: "16px" }}>{error.message}</p>
-          <StyledButton type="primary" onClick={() => dispatch(getAnalytics())}>
-            Retry
-          </StyledButton>
-          <StyledButton style={{ marginLeft: "16px" }} onClick={() => navigate("/dashboard")}>
-            Back to Dashboard
-          </StyledButton>
-        </StyledCard>
-      </motion.div>
-    );
-  }
-
-  const orderCountData = {
-    labels: analytics.map((a) => moment(a.date).format(type === "daily" ? "YYYY-MM-DD" : "YYYY-MM")),
+  // Chart data with robust fallbacks and top 10 limit for readability
+  const salesChartData = {
+    labels: ['Dine-in', 'Takeaway', 'Online'],
     datasets: [
       {
-        label: "Total Orders",
-        data: analytics.map((a) => a.orders.total),
-        borderColor: "#faad14",
-        backgroundColor: "rgba(250, 173, 20, 0.2)",
-        Filler: true,
+        label: 'Sales by Order Type',
+        data: [
+          data?.orderTypes?.dineIn?.amount || 0,
+          data?.orderTypes?.takeaway?.amount || 0,
+          data?.orderTypes?.online?.amount || 0,
+        ],
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
       },
     ],
   };
 
-  const orderTypeData = {
-    labels: ["Dine-in", "Takeaway", "Online"],
+  const paymentChartData = {
+    labels: ['Cash', 'Card', 'Online'],
     datasets: [
       {
-        data: analytics.reduce(
-          (acc, a) => [
-            acc[0] + a.orders.by_type["dine-in"],
-            acc[1] + a.orders.by_type.takeaway,
-            acc[2] + a.orders.by_type.online,
-          ],
-          [0, 0, 0]
-        ),
-        backgroundColor: ["#faad14", "#52c41a", "#1890ff"],
+        label: 'Payment Methods',
+        data: [
+          data?.paymentMethods?.cash?.amount || 0,
+          data?.paymentMethods?.card?.amount || 0,
+          data?.paymentMethods?.online?.amount || 0,
+        ],
+        backgroundColor: ['#4BC0C0', '#9966FF', '#FF9F40'],
       },
     ],
   };
 
-  const paymentMethodData = {
-    labels: ["Cash", "Card", "Online"],
+  const topItemsChartData = {
+    labels:
+      data?.topSellingItems?.length > 0
+        ? data.topSellingItems.map((topItem) => {
+            const itemId = topItem.item?._id || topItem._id;
+            const menuItem = menu.find((item) => item._id === itemId);
+            return menuItem?.name || 'Loading...';
+          })
+        : ['No Data'],
     datasets: [
       {
-        data: analytics.reduce(
-          (acc, a) => [
-            acc[0] + a.orders.by_payment_method.cash,
-            acc[1] + a.orders.by_payment_method.card,
-            acc[2] + a.orders.by_payment_method.online,
-          ],
-          [0, 0, 0]
-        ),
-        backgroundColor: ["#ff4d4f", "#1890ff", "#52c41a"],
+        label: 'Top Selling Items',
+        data:
+          data?.topSellingItems?.length > 0
+            ? data.topSellingItems.map((item) => item?.quantity || 0)
+            : [0],
+        backgroundColor: '#36A2EB',
       },
     ],
   };
 
-  const topItemsData = {
-    labels: analytics
-      .flatMap((a) => a.items)
-      .sort((a, b) => b.total_quantity - a.total_quantity)
-      .slice(0, 5)
-      .map((i) => i.item_name),
-    datasets: [
-      {
-        label: "Quantity Sold",
-        data: analytics
-          .flatMap((a) => a.items)
-          .sort((a, b) => b.total_quantity - a.total_quantity)
-          .slice(0, 5)
-          .map((i) => i.total_quantity),
-        backgroundColor: "#faad14",
-      },
-    ],
-  };
+  // const inventoryUsageChartData = {
+  //   labels:
+  //     data?.inventoryAnalysis?.usage?.length > 0
+  //       ? data.inventoryAnalysis.usage
+  //           .slice(0, 10) // Limit to top 10 for readability
+  //           .map((item) => item.item?.name || 'Unknown')
+  //       : ['No Data'],
+  //   datasets: [
+  //     {
+  //       label: 'Inventory Usage (Quantity)',
+  //       data:
+  //         data?.inventoryAnalysis?.usage?.length > 0
+  //           ? data.inventoryAnalysis.usage
+  //               .slice(0, 10)
+  //               .map((item) => item.usedQuantity || 0)
+  //           : [0],
+  //       backgroundColor: '#FF6384',
+  //     },
+  //     {
+  //       label: 'Inventory Usage (Cost)',
+  //       data:
+  //         data?.inventoryAnalysis?.usage?.length > 0
+  //           ? data.inventoryAnalysis.usage.slice(0, 10).map((item) => item.totalCost || 0)
+  //           : [0],
+  //       backgroundColor: '#FF9F40',
+  //     },
+  //   ],
+  // };
 
-  const financialData = {
-    labels: analytics.map((a) => moment(a.date).format(type === "daily" ? "YYYY-MM-DD" : "YYYY-MM")),
-    datasets: [
-      {
-        label: "Revenue",
-        data: analytics.map((a) => a.financials.total_revenue),
-        borderColor: "#52c41a",
-        backgroundColor: "rgba(82, 196, 26, 0.2)",
-        Filler: true,
-      },
-      {
-        label: "Profit",
-        data: analytics.map((a) => a.financials.profit),
-        borderColor: "#1890ff",
-        backgroundColor: "rgba(24, 144, 255, 0.2)",
-        Filler: true,
-      },
-    ],
-  };
-
-  const inventoryColumns = [
-    { title: "Item Name", dataIndex: "item_name", key: "item_name" },
-    {
-      title: "Current Stock",
-      dataIndex: "current_stock",
-      key: "current_stock",
-      sorter: (a, b) => a.current_stock - b.current_stock,
-    },
-    {
-      title: "Stock Used",
-      dataIndex: "stock_used",
-      key: "stock_used",
-      sorter: (a, b) => a.stock_used - b.stock_used,
-    },
-  ];
+  // const inventoryStockChartData = {
+  //   labels:
+  //     data?.inventoryAnalysis?.stock?.length > 0
+  //       ? data.inventoryAnalysis.stock
+  //           .slice(0, 10) // Limit to top 10 for readability
+  //           .map((item) => item.item?.name || 'Unknown')
+  //       : ['No Data'],
+  //   datasets: [
+  //     {
+  //       label: 'Current Stock (Quantity)',
+  //       data:
+  //         data?.inventoryAnalysis?.stock?.length > 0
+  //           ? data.inventoryAnalysis.stock.slice(0, 10).map((item) => item.currentStock || 0)
+  //           : [0],
+  //       backgroundColor: '#4BC0C0',
+  //     },
+  //     {
+  //       label: 'Current Stock (Value)',
+  //       data:
+  //         data?.inventoryAnalysis?.stock?.length > 0
+  //           ? data.inventoryAnalysis.stock.slice(0, 10).map((item) => item.totalValue || 0)
+  //           : [0],
+  //       backgroundColor: '#36A2EB',
+  //     },
+  //   ],
+  // };
 
   return (
     <Fragment>
-      <div className="min-h-screen flex bg-gradient-to-b from-gray-50 to-gray-100">
+      <div className="flex flex-col items-center">
         <FloatingSidebar />
-        <motion.div
-          className={`content w-full p-6 sm:p-8 transition-all duration-300`}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Content style={{ padding: "24px", background: "transparent" }}>
-            <motion.div
-              className="header-div flex items-center gap-3 mb-8"
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              <FaChartLine className="text-4xl text-yellow-600" />
-              <p style={{ color: "#1d3557", margin: 0 }}>
-                Analytics Dashboard
-              </p>
-            </motion.div>
+        <div className="container mx-auto p-6">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+            className="bg-white rounded-lg shadow-lg p-6 mb-6"
+          >
+            <h1 className="text-2xl font-bold mb-4">Analytics Dashboard</h1>
 
             {/* Filters */}
-            <motion.div
-              className="flex flex-col sm:flex-row gap-4 mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <RangePicker
-                onChange={(dates) => setDateRange(dates || [])}
-                className="rounded-lg w-full sm:w-64"
-              />
-              <Select
-                value={type}
-                onChange={(value) => setType(value)}
-                className="rounded-lg w-full sm:w-48"
-                dropdownStyle={{ borderRadius: "8px" }}
+            <div className="flex flex-wrap gap-4 mb-6">
+              <select
+                value={period}
+                onChange={(e) => dispatch(setPeriod(e.target.value))}
+                className="border rounded-md p-2"
               >
-                <Option value="daily">Daily</Option>
-                <Option value="monthly">Monthly</Option>
-              </Select>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <StyledButton type="primary" onClick={handleFetchAnalytics}>
-                  Fetch Analytics
-                </StyledButton>
-              </motion.div>
-            </motion.div>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="custom">Custom</option>
+              </select>
 
-            {analytics.length > 0 && (
-              <>
-                {/* Order Count Chart */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
+              {period === 'custom' && (
+                <>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => dispatch(setStartDate(e.target.value))}
+                    className="border rounded-md p-2"
+                  />
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => dispatch(setEndDate(e.target.value))}
+                    className="border rounded-md p-2"
+                  />
+                </>
+              )}
+
+              <button
+                onClick={handleGenerateReport}
+                disabled={analyticsLoading}
+                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-400"
+              >
+                {analyticsLoading ? 'Generating...' : 'Generate Report'}
+              </button>
+
+              {/* Export Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsExportOpen(!isExportOpen)}
+                  disabled={!data || analyticsLoading}
+                  className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 disabled:bg-gray-400"
                 >
-                  <StyledCard style={{ marginBottom: "32px" }}>
-                    <p  style={{ color: "#2d3748", marginBottom: "24px" }}>
-                      Order Count Over Time
-                    </p>
-                    <Line data={orderCountData} options={{ responsive: true }} />
-                  </StyledCard>
-                </motion.div>
-
-                {/* Order Types and Payment Methods */}
-                <Row gutter={[16, 16]} style={{ marginBottom: "32px" }}>
-                  <Col xs={24} md={12}>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.5 }}
+                  <FiDownload /> Export
+                </button>
+                {isExportOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-10">
+                    <button
+                      onClick={() => {
+                        exportToJSON();
+                        setIsExportOpen(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                     >
-                      <StyledCard>
-                        <p style={{ color: "#2d3748", marginBottom: "24px" }}>
-                          Order Types
-                        </p>
-                        <Pie data={orderTypeData} options={{ responsive: true }} />
-                      </StyledCard>
-                    </motion.div>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.6 }}
+                      JSON
+                    </button>
+                    <button
+                      onClick={() => {
+                        exportToExcel();
+                        setIsExportOpen(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                     >
-                      <StyledCard>
-                        <p style={{ color: "#2d3748", marginBottom: "24px" }}>
-                          Payment Methods
-                        </p>
-                        <Pie data={paymentMethodData} options={{ responsive: true }} />
-                      </StyledCard>
-                    </motion.div>
-                  </Col>
-                </Row>
+                      Excel
+                    </button>
+                    <button
+                      onClick={() => {
+                        exportToPDF();
+                        setIsExportOpen(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      PDF
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
 
-                {/* Top Selling Items */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.7 }}
+            {/* Error Display */}
+            {(analyticsError || menuError) && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                {analyticsError || menuError}
+                <button
+                  onClick={() => dispatch(clearError())}
+                  className="ml-2 text-sm underline"
                 >
-                  <StyledCard style={{ marginBottom: "32px" }}>
-                    <p style={{ color: "#2d3748", marginBottom: "24px" }}>
-                      Top 5 Selling Items
-                    </p>
-                    <Bar data={topItemsData} options={{ responsive: true, indexAxis: "y" }} />
-                  </StyledCard>
-                </motion.div>
-
-                {/* Financials Chart */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.8 }}
-                >
-                  <StyledCard style={{ marginBottom: "32px" }}>
-                    <p style={{ color: "#2d3748", marginBottom: "24px" }}>
-                      Revenue and Profit Over Time
-                    </p>
-                    <Line data={financialData} options={{ responsive: true }} />
-                  </StyledCard>
-                </motion.div>
-
-                {/* Inventory Table */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.9 }}
-                >
-                  <StyledCard>
-                    <p  style={{ color: "#2d3748", marginBottom: "24px" }}>
-                      Inventory Usage
-                    </p>
-                    <StyledTable
-                      columns={inventoryColumns}
-                      dataSource={analytics[analytics.length - 1]?.inventory || []}
-                      rowKey="inventory_item_id"
-                      locale={{ emptyText: "No inventory data available." }}
-                      scroll={{ x: true }}
-                      pagination={{ pageSize: 10 }}
-                    />
-                  </StyledCard>
-                </motion.div>
-              </>
+                  Dismiss
+                </button>
+              </div>
             )}
-          </Content>
-        </motion.div>
+
+            {/* Loading State */}
+            {(analyticsLoading || menuLoading) && !data && (
+              <div className="text-center py-4">Loading analytics data...</div>
+            )}
+
+            {/* Key Metrics */}
+            {data && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <motion.div
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  className="bg-gray-100 p-4 rounded-lg"
+                >
+                  <h3 className="font-semibold">Total Sales</h3>
+                  <p className="text-2xl">${(data.totalSales || 0).toFixed(2)}</p>
+                </motion.div>
+                <motion.div
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  className="bg-gray-100 p-4 rounded-lg"
+                >
+                  <h3 className="font-semibold">Total Profit</h3>
+                  <p className="text-2xl">${(data.totalProfit || 0).toFixed(2)}</p>
+                </motion.div>
+                <motion.div
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  className="bg-gray-100 p-4 rounded-lg"
+                >
+                  <h3 className="font-semibold">Total Loss</h3>
+                  <p className="text-2xl">${(data.totalLoss || 0).toFixed(2)}</p>
+                </motion.div>
+              </div>
+            )}
+
+            {/* Charts */}
+            {data && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-gray-100 p-4 rounded-lg"
+                >
+                  <h3 className="font-semibold mb-2">Sales by Order Type</h3>
+                  <Pie data={salesChartData} />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-gray-100 p-4 rounded-lg"
+                >
+                  <h3 className="font-semibold mb-2">Payment Methods</h3>
+                  <Pie data={paymentChartData} />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-gray-100 p-4 rounded-lg col-span-1 lg:col-span-2"
+                >
+                  <h3 className="font-semibold mb-2">Top Selling Items</h3>
+                  <Bar data={topItemsChartData} options={{ responsive: true }} />
+                </motion.div>
+
+                {/* <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-gray-100 p-4 rounded-lg col-span-1 lg:col-span-2"
+                >
+                  <h3 className="font-semibold mb-2">Inventory Usage</h3>
+                  {data.inventoryAnalysis?.usage?.length > 0 ? (
+                    <Bar
+                      data={inventoryUsageChartData}
+                      options={{
+                        responsive: true,
+                        scales: {
+                          y: { beginAtZero: true, title: { display: true, text: 'Quantity / Cost ($)' } },
+                        },
+                        plugins: {
+                          legend: { position: 'top' },
+                          tooltip: {
+                            callbacks: {
+                              label: (context) => `${context.dataset.label}: ${context.raw}`,
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  ) : (
+                    <p className="text-center text-gray-500">
+                      No inventory usage data available for this period
+                    </p>
+                  )}
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-gray-100 p-4 rounded-lg col-span-1 lg:col-span-2"
+                >
+                  <h3 className="font-semibold mb-2">Inventory Stock</h3>
+                  {data.inventoryAnalysis?.stock?.length > 0 ? (
+                    <Bar
+                      data={inventoryStockChartData}
+                      options={{
+                        responsive: true,
+                        scales: {
+                          y: { beginAtZero: true, title: { display: true, text: 'Quantity / Value ($)' } },
+                        },
+                        plugins: {
+                          legend: { position: 'top' },
+                          tooltip: {
+                            callbacks: {
+                              label: (context) => `${context.dataset.label}: ${context.raw}`,
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  ) : (
+                    <p className="text-center text-gray-500">No inventory stock data available</p>
+                  )}
+                </motion.div> */}
+              </div>
+            )}
+          </motion.div>
+        </div>
       </div>
     </Fragment>
   );
 };
 
-Analytics.propTypes = {
-  isSidebarOpen: PropTypes.bool.isRequired,
-  setIsSidebarOpen: PropTypes.func.isRequired,
-};
-
-export default Analytics;
+export default AnalyticsDashboard;

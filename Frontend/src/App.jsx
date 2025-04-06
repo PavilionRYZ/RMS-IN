@@ -58,16 +58,16 @@ const App = () => {
               {/* <Route path="/login" element={<Navigate to={redirectRoute} replace />} /> */}
               {/* <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminDashboard  /></ProtectedRoute>} /> */}
               <Route path="/staff" element={<ProtectedRoute roles={['staff', 'kitchen_staff']}><StaffDashboard  /></ProtectedRoute>} />
-              <Route path="/customer" element={<ProtectedRoute roles={['customer']}><CustomerDashboard  /></ProtectedRoute>} />
+              {/* <Route path="/customer" element={<ProtectedRoute roles={['customer']}><CustomerDashboard  /></ProtectedRoute>} /> */}
               <Route path="/manage-menu" element={<ProtectedRoute permissions={['manage_menu']}><MenuManagement  /></ProtectedRoute>} />
               <Route path="/manage_orders" element={<ProtectedRoute permissions={['manage_orders']}><ManageOrders  /></ProtectedRoute>} />
               <Route path="/manage-inventory" element={<ProtectedRoute permissions={['inventory_management']}><ManageInventory  /></ProtectedRoute>} />
               <Route path="/manage-staff" element={<ProtectedRoute roles={['admin']}><ManageStaff  /></ProtectedRoute>} />
               <Route path="/manage-staff-payments" element={<ProtectedRoute><ManageStaffPayments roles={['admin']}/></ProtectedRoute>} />
-              <Route path="/manage-customers" element={<ProtectedRoute permissions={['manage_customers']}><ManageCustomers  /></ProtectedRoute>} />
+              {/* <Route path="/manage-customers" element={<ProtectedRoute permissions={['manage_customers']}><ManageCustomers  /></ProtectedRoute>} /> */}
               <Route path="/reservations" element={<ProtectedRoute permissions={['manage_reservations']}><Reservations  /></ProtectedRoute>} />
               <Route path="/payment-manage" element={<ProtectedRoute permissions={['manage_payments']}><ManagePayments  /></ProtectedRoute>} />
-              <Route path="/reports" element={<ProtectedRoute permissions={['view_reports']}><Reports  /></ProtectedRoute>} />
+              {/* <Route path="/reports" element={<ProtectedRoute permissions={['view_reports']}><Reports  /></ProtectedRoute>} /> */}
               <Route path="/analytics" element={<ProtectedRoute permissions={['analytics_management']}><Analytics  /></ProtectedRoute>} />
               <Route path="/order-items-details/:id" element={<OrderItemDetails permissions={['manage_orders']}  />} />
               <Route path="/view-order/:id" element={<ProtectedRoute permissions={['manage_orders']}><ViewOrderDetails  /></ProtectedRoute>} />

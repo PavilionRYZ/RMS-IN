@@ -36,7 +36,6 @@ import {
   DeleteOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
-import PropTypes from "prop-types";
 import { storage } from "../Storage/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
@@ -869,9 +868,5 @@ const ManageMenu = () => {
   );
 };
 
-ManageMenu.propTypes = {
-  isSidebarOpen: PropTypes.bool.isRequired,
-  setIsSidebarOpen: PropTypes.func.isRequired,
-};
 
 export default ManageMenu;

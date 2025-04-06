@@ -32,7 +32,6 @@ import {
 } from "antd";
 import { EditOutlined, DeleteOutlined, PlusOutlined, MinusOutlined } from "@ant-design/icons";
 import { FaBoxOpen } from "react-icons/fa";
-import PropTypes from "prop-types";
 import { motion } from "framer-motion";
 import styled from "styled-components";
 import moment from "moment";
@@ -324,6 +323,7 @@ const ManageInventory = () => {
         <FloatingSidebar/>
         <motion.div
           className={`content w-full p-6 sm:p-8 transition-all duration-300`}
+          style={{display: 'flex', flexDirection: 'column', gap:"1rem"}}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
@@ -691,11 +691,6 @@ const ManageInventory = () => {
       </div>
     </Fragment>
   );
-};
-
-ManageInventory.propTypes = {
-  isSidebarOpen: PropTypes.bool.isRequired,
-  setIsSidebarOpen: PropTypes.func.isRequired,
 };
 
 export default ManageInventory;

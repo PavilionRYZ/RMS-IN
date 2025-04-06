@@ -20,7 +20,6 @@ import {
   Card,
 } from "antd";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import PropTypes from "prop-types";
 import { MdManageAccounts } from "react-icons/md";
 import { motion } from "framer-motion";
 import styled from "styled-components";
@@ -402,13 +401,13 @@ const ManageStaff = () => {
               onCancel={() => setUpdateModalVisible(false)}
               footer={null}
               style={{ top: 20 }}
-              bodyStyle={{ padding: "24px", background: "#f9f9f9", borderRadius: "8px" }}
+              Style={{ padding: "24px", background: "#f9f9f9", borderRadius: "8px" }}
             >
               <Form form={updateForm} layout="vertical" onFinish={handleUpdateUserSubmit}>
                 <Row gutter={[16, 16]}>
                   <Col xs={24} sm={12}>
                     <Form.Item
-                      label="Name"
+                      label="Name" 
                       name="name"
                       rules={[{ required: true, message: "Please enter the name" }]}
                     >
@@ -516,11 +515,6 @@ const ManageStaff = () => {
       </div>
     </Fragment>
   );
-};
-
-ManageStaff.propTypes = {
-  isSidebarOpen: PropTypes.bool.isRequired,
-  setIsSidebarOpen: PropTypes.func.isRequired,
 };
 
 export default ManageStaff;
