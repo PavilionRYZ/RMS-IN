@@ -10,7 +10,7 @@ import Loading from "../Loading/Loading";
 import Slider from "react-slick"; // Import react-slick for carousel
 import "slick-carousel/slick/slick.css"; // Slick carousel styles
 import "slick-carousel/slick/slick-theme.css"; // Slick carousel theme
-
+import ResFvi from "../../assets/ResFvi.png"; // Import your logo image
 const HomePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -104,7 +104,7 @@ const HomePage = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1, ease: "easeOut" }}
                   >
-                    <img className="w-32 sm:w-48 mb-4 drop-shadow-lg" src="../../assets/ResFvi.png" alt="Logo" />
+                    <img className="w-32 sm:w-48 mb-4 drop-shadow-lg" src={ResFvi} alt="Logo" />
                     <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold mb-4 sm:mb-6 tracking-tight leading-tight drop-shadow-xl">
                       Savor the Flavor at <span className="text-amber-400">RestoMaster</span>
                     </h1>
