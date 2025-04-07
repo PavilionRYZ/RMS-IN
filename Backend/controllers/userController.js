@@ -27,7 +27,8 @@ const sendResponseWithToken = (user, res) => {
   res.cookie("token", token, {
     httpOnly: true,
     sameSite: "Strict",
-    maxAge: 1 * 24 * 60 * 60 * 1000 // 1 days
+    maxAge: 1 * 24 * 60 * 60 * 1000, // 1 days
+    secure: process.env.NODE_ENV === "production" // Set to true if using HTTPS
   }).status(200).json({
     success: true,
     message: "User logged in successfully",

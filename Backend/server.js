@@ -16,7 +16,7 @@ const app = express();
 app.use(cookieParser());
 app.use(cors(
     {
-        origin: 'https://restomasterfrontend.vercel.app/',
+        origin: 'https://restomasterfrontend.vercel.app',
         credentials: true,
     }
 ));
