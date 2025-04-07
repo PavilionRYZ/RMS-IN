@@ -140,24 +140,11 @@ exports.loginUser = async (req, res, next) => {
 //logout user
 exports.logoutUser = async (req, res, next) => {
   try {
-    req.user = null;
-
     res.clearCookie("token", {
       httpOnly: true,
       sameSite: "Strict",
       secure: process.env.NODE_ENV === "production"
     });
-
-    if (req.session) {
-      return req.session.destroy((err) => {
-        if (err) return next(new errorHandler(500, "Error destroying session"));
-
-        res.status(200).json({
-          success: true,
-          message: "Sign out successful"
-        });
-      });
-    }
 
     res.status(200).json({
       success: true,
@@ -168,6 +155,7 @@ exports.logoutUser = async (req, res, next) => {
     next(new errorHandler(500, "Error while signing out user"));
   }
 };
+
 
 // Admin only: Edit a user's credentials
 exports.updateUser = async (req, res, next) => {

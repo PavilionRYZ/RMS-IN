@@ -9,8 +9,10 @@ export const login = createAsyncThunk(
     "auth/login",
     async (credentials, { rejectWithValue }) => {
         try {
-            const response = await axios.post(`${API_URL}/login`, credentials);
-            Cookies.set("token", response.data.token);
+            const response = await axios.post(`${API_URL}/login`, credentials, {
+                withCredentials: true
+            });
+            // Cookies.set("token", response.data.token);
             return response.data.user;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Login failed");
@@ -23,14 +25,16 @@ export const logout = createAsyncThunk(
     "auth/logout",
     async (_, { rejectWithValue }) => {
         try {
-            await axios.post(`${API_URL}/logout`);
-            Cookies.remove("token");
+            await axios.post(`${API_URL}/logout`, {}, {
+                withCredentials: true // ✅ necessary
+            });
             return true;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Logout failed");
         }
     }
 );
+
 
 export const forgotPassword = createAsyncThunk(
     "auth/forgotPassword",

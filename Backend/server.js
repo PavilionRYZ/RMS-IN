@@ -14,7 +14,12 @@ connectDB();
 // Initialize Express app
 const app = express();
 app.use(cookieParser());
-app.use(cors());
+app.use(cors(
+    {
+        origin: 'https://restomasterfrontend.vercel.app/',
+        credentials: true,
+    }
+));
 app.use(express.json());
 
 
