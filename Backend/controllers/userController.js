@@ -28,7 +28,7 @@ const sendResponseWithToken = (user, res) => {
     httpOnly: true,
     sameSite: "Strict",
     maxAge: 1 * 24 * 60 * 60 * 1000, // 1 days
-    secure: process.env.NODE_ENV === "production" // Set to true if using HTTPS
+    secure: true // Set to true if using HTTPS
   }).status(200).json({
     success: true,
     message: "User logged in successfully",
