@@ -22,17 +22,17 @@ const transporter = nodemailer.createTransport({
 // Helper function to create a token and send response
 const sendResponseWithToken = (user, res) => {
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-  const { password: pass, ...rest } = user._doc; // Exclude password from the response
+  const { password: pass, ...rest } = user._doc;
 
   res.cookie("token", token, {
     httpOnly: true,
-    sameSite: "Strict",
-    maxAge: 1 * 24 * 60 * 60 * 1000, // 1 days
-    secure: true // Set to true if using HTTPS
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    maxAge: 1 * 24 * 60 * 60 * 1000,
   }).status(200).json({
     success: true,
     message: "User logged in successfully",
-    user: rest
+    user: rest,
   });
 };
 
