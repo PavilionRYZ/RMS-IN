@@ -3,11 +3,11 @@ import { Fragment, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { placeOrder } from "../Redux/Slices/orderSlice";
 import { clearCart, updateQuantity, removeFromCart } from "../Redux/Slices/cartSlice";
-import { toast } from "react-toastify";
+import {ToastContainer, toast } from "react-toastify";
 import { FaPlus, FaMinus, FaTrash } from "react-icons/fa";
 import EmptyCart from "../../assets/Empty-bro.svg";
 import FloatingSidebar from "../Layout/FloatingSidebar";
-
+import "react-toastify/dist/ReactToastify.css";
 const Cart = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -179,6 +179,7 @@ const Cart = () => {
         )}
       </div>
     </div>
+    <ToastContainer autoClose={3000}/>
   </Fragment>
   );
 };
