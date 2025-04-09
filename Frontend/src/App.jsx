@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import LoginPage from './components/Auth/LoginPage';
@@ -27,25 +28,25 @@ import ManageStaffPayments from './components/Pages/ManageStaffPayments';
 import ForgotPassword from './components/Pages/ForgotPassword';
 import VerifyOTP from './components/Pages/VerifyOTP';
 import ResetPassword from './components/Pages/ResetPassword';
-import { verifyToken } from './components/Redux/Slices/authSlice';
+// import { verifyToken } from './components/Redux/Slices/authSlice';
 import Loading from './components/Loading/Loading';
 // import SetupInterceptors from './setupInterceptors.jsx';
 const App = () => {
-  const dispatch = useDispatch();
-    const navigate = useNavigate();
+  // const dispatch = useDispatch();
+  //   const navigate = useNavigate();
   const { user, isAuthenticated ,loading} = useSelector((state) => state.auth);
 
-  // Verify token on app load
-  useEffect(() => {
-    dispatch(verifyToken());
-}, [dispatch]);
+//   // Verify token on app load
+//   useEffect(() => {
+//     dispatch(verifyToken());
+// }, [dispatch]);
 
-// Redirect to login if not authenticated and not loading
-useEffect(() => {
-    if (!loading && !isAuthenticated) {
-        navigate("/login", { replace: true });
-    }
-}, [loading, isAuthenticated, navigate]);
+// // Redirect to login if not authenticated and not loading
+// useEffect(() => {
+//     if (!loading && !isAuthenticated) {
+//         navigate("/login", { replace: true });
+//     }
+// }, [loading, isAuthenticated, navigate]);
 
 
 if (loading) {
