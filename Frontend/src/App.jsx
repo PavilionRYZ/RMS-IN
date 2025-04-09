@@ -34,7 +34,7 @@ import Loading from './components/Loading/Loading';
 const App = () => {
   // const dispatch = useDispatch();
   //   const navigate = useNavigate();
-  const { user, isAuthenticated ,loading} = useSelector((state) => state.auth);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
 
 //   // Verify token on app load
 //   useEffect(() => {
@@ -48,10 +48,6 @@ const App = () => {
 //     }
 // }, [loading, isAuthenticated, navigate]);
 
-
-if (loading) {
-    return <Loading />; 
-}
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
