@@ -179,7 +179,6 @@ node seed.js
 
 ## 📌 Future Enhancements
 
-- PDF invoice generation
 - QR code table ordering
 - Firebase notifications for order updates
 - Multi-language support
