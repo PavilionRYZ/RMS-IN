@@ -1,4 +1,4 @@
-import loading from '../../assets/loading.svg'
+import loading from '../../assets/infinite-spinner.svg'
 const Loading = () => {
   return (
     <div>

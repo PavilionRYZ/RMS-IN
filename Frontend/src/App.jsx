@@ -1,8 +1,5 @@
-/* eslint-disable no-unused-vars */
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-// import { useEffect, useState } from 'react';
-// import Cookies from "js-cookie";
 import LoginPage from './components/Auth/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 // import AdminDashboard from './components/Pages/AdminDashboard';
@@ -13,7 +10,7 @@ import HomePage from './components/Pages/HomePage';
 import NotAuthorized from './components/Pages/NotAuthorized';
 import NotFound from './components/Pages/NotFound';
 import Footer from './components/Layout/Footer';
-import { Fragment } from 'react';
+import { Fragment, useEffect } from 'react';
 import ManageOrders from './components/Pages/ManageOrders';
 import ManageInventory from './components/Pages/ManageInventory';
 import ManageStaff from './components/Pages/ManageStaff';
@@ -30,11 +27,30 @@ import ManageStaffPayments from './components/Pages/ManageStaffPayments';
 import ForgotPassword from './components/Pages/ForgotPassword';
 import VerifyOTP from './components/Pages/VerifyOTP';
 import ResetPassword from './components/Pages/ResetPassword';
-// import { clearCookies } from './components/Redux/Slices/authSlice';
-// import { clearOrderState } from './components/Redux/Slices/orderSlice';
-// import { resetUserState } from './components/Redux/Slices/userSlice';
+import { verifyToken } from './components/Redux/Slices/authSlice';
+import Loading from './components/Loading/Loading';
+
 const App = () => {
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+    const navigate = useNavigate();
+  const { user, isAuthenticated ,loading} = useSelector((state) => state.auth);
+
+  // Verify token on app load
+  useEffect(() => {
+    dispatch(verifyToken());
+}, [dispatch]);
+
+// Redirect to login if not authenticated and not loading
+useEffect(() => {
+    if (!loading && !isAuthenticated) {
+        navigate("/login", { replace: true });
+    }
+}, [loading, isAuthenticated, navigate]);
+
+
+if (loading) {
+    return <Loading />; 
+}
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">

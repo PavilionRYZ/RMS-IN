@@ -1,18 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-// import Cookies from "js-cookie";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/api/v1`; // Adjust this based on your backend URL
+const API_URL = `${import.meta.env.VITE_API_URL}/api/v1`;
 
 // Login user
 export const login = createAsyncThunk(
     "auth/login",
     async (credentials, { rejectWithValue }) => {
         try {
-            const response = await axios.post(`${API_URL}/login`, credentials, {
-                withCredentials: true
-            });
-            // Cookies.set("token", response.data.token);
+            const response = await axios.post(`${API_URL}/login`, credentials);
             return response.data.user;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Login failed");
@@ -20,21 +16,19 @@ export const login = createAsyncThunk(
     }
 );
 
-// Logout user
+// Logout user with dispatch access
 export const logout = createAsyncThunk(
     "auth/logout",
-    async (_, { rejectWithValue }) => {
+    async (_, { rejectWithValue, dispatch }) => {
         try {
-            await axios.post(`${API_URL}/logout`, {}, {
-                withCredentials: true // ✅ necessary
-            });
+            await axios.post(`${API_URL}/logout`);
+            dispatch(clearCookies()); // Clear Redux state
             return true;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Logout failed");
         }
     }
 );
-
 
 export const forgotPassword = createAsyncThunk(
     "auth/forgotPassword",
@@ -55,7 +49,7 @@ export const verifyOTP = createAsyncThunk(
             const response = await axios.post(`${API_URL}/verifyOTP`, { email, otp });
             return {
                 message: response.data.message,
-                resetToken: response.data.resetToken, // Assuming the backend returns a reset token
+                resetToken: response.data.resetToken,
             };
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to verify OTP");
@@ -79,6 +73,18 @@ export const resetPassword = createAsyncThunk(
     }
 );
 
+export const verifyToken = createAsyncThunk(
+    "auth/verifyToken",
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await axios.get(`${API_URL}/verify-token`);
+            return response.data.user;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Token verification failed");
+        }
+    }
+);
+
 const authSlice = createSlice({
     name: "auth",
     initialState: {
@@ -86,6 +92,8 @@ const authSlice = createSlice({
         loading: false,
         error: null,
         isAuthenticated: false,
+        message: null, // Added for consistency
+        resetToken: null, // Ensure this is in initial state
     },
     reducers: {
         clearAuthState: (state) => {
@@ -98,7 +106,8 @@ const authSlice = createSlice({
             state.loading = false;
             state.error = null;
             state.isAuthenticated = false;
-        }
+            state.message = null;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -147,7 +156,7 @@ const authSlice = createSlice({
             .addCase(verifyOTP.fulfilled, (state, action) => {
                 state.loading = false;
                 state.message = action.payload.message;
-                state.resetToken = action.payload.resetToken; // Store the reset token in the state
+                state.resetToken = action.payload.resetToken;
             })
             .addCase(verifyOTP.rejected, (state, action) => {
                 state.loading = false;
@@ -164,6 +173,21 @@ const authSlice = createSlice({
             })
             .addCase(resetPassword.rejected, (state, action) => {
                 state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(verifyToken.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(verifyToken.fulfilled, (state, action) => {
+                state.loading = false;
+                state.user = action.payload;
+                state.isAuthenticated = true;
+            })
+            .addCase(verifyToken.rejected, (state, action) => {
+                state.loading = false;
+                state.user = null;
+                state.isAuthenticated = false;
                 state.error = action.payload;
             });
     },

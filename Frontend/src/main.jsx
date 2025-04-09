@@ -7,6 +7,7 @@ import {store} from './components/Redux/Store.js'
 import { PersistGate } from "redux-persist/integration/react";
 import { persistStore } from 'redux-persist'
 import axios from "axios";
+import SetupInterceptors from './setupInterceptors.jsx';
 axios.defaults.withCredentials = true;
 
 const persistor = persistStore(store);
@@ -15,6 +16,7 @@ createRoot(document.getElementById('root')).render(
   <Provider store={store}>
    <PersistGate loading={null} persistor={persistor}> 
       <App />
+      <SetupInterceptors />
   </PersistGate>
     </Provider> 
   </StrictMode>

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createUser, loginUser, logoutUser, updateUser,deleteUser, getAllUsers, updateUserCredentials, forgotPassword, resetPassword, verifyOTP } = require('../controllers/userController');
+const { createUser, loginUser, logoutUser, updateUser,deleteUser, getAllUsers, updateUserCredentials, forgotPassword, resetPassword, verifyOTP,verifyToken: verifyTokenController } = require('../controllers/userController');
 const { verifyAdmin, verifyToken } = require('../middleware/authMiddleware');
 
 
@@ -14,5 +14,6 @@ router.route("/deleteUser/:id").delete(verifyAdmin, deleteUser);
 router.route("/forgotPassword").post(forgotPassword);
 router.route("/resetPassword").post(resetPassword);
 router.route("/verifyOTP").post(verifyOTP);
+router.route("/verify-token").post(verifyToken, verifyTokenController);
 
 module.exports = router;
