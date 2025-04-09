@@ -29,7 +29,7 @@ import VerifyOTP from './components/Pages/VerifyOTP';
 import ResetPassword from './components/Pages/ResetPassword';
 import { verifyToken } from './components/Redux/Slices/authSlice';
 import Loading from './components/Loading/Loading';
-
+import SetupInterceptors from './setupInterceptors.jsx';
 const App = () => {
   const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -55,6 +55,7 @@ if (loading) {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <div className="flex-1">
+        <SetupInterceptors />
         {user && isAuthenticated ? (
           <Fragment>
             <Routes>
