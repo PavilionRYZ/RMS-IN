@@ -9,6 +9,11 @@ import { resetUserState } from "../Redux/Slices/userSlice";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { clearOrderState } from "../Redux/Slices/orderSlice";
+import { clearInventoryState } from "../Redux/Slices/inventorySlice";
+import { clearAnalytics } from "../Redux/Slices/analyticsSlice";
+import { clearReservationState } from "../Redux/Slices/reservationSlice";
+import { clearMenuState } from "../Redux/Slices/menuSlice";
+import { clearStaffManagementState } from "../Redux/Slices/staffManagementSlice";
 import { motion } from "framer-motion"; // Import framer-motion
 
 const navLinks = [
@@ -58,6 +63,11 @@ const FloatingSidebar = () => {
       dispatch(resetUserState());
       dispatch(clearOrderState());
       dispatch(clearCookies());
+      dispatch(clearInventoryState());
+      dispatch(clearAnalytics());
+      dispatch(clearReservationState());
+      dispatch(clearMenuState());
+      dispatch(clearStaffManagementState());
       setIsOpen(false);
     } catch (error) {
       toast.error(error || "Logout failed. Please try again.", toastOptions);

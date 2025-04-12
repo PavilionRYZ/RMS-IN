@@ -74,7 +74,13 @@ const menuSlice = createSlice({
         },
         resetMenuItem: (state) => {
             state.menuItem = null; // Add a reducer to reset menuItem
-          },
+        },
+        clearMenuState: (state) => {
+            state.menu = [];
+            state.menuItem = null;
+            state.loading = false;
+            state.error = null;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -121,7 +127,7 @@ const menuSlice = createSlice({
             .addCase(deleteMenuItem.fulfilled, (state, action) => {
                 state.loading = false;
                 state.menuItem = action.payload;
-                
+
             })
             .addCase(deleteMenuItem.rejected, (state, action) => {
                 state.loading = false;
@@ -143,6 +149,6 @@ const menuSlice = createSlice({
 
 });
 
-export const { resetMenu, resetMenuItem } = menuSlice.actions;
+export const { resetMenu, resetMenuItem, clearMenuState } = menuSlice.actions;
 
 export default menuSlice.reducer;

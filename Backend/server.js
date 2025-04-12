@@ -3,7 +3,6 @@ const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const connectDB = require("./config/database");
 const cors = require('cors');
-// require("./controllers/cronJobs");
 
 // Load environment variables
 dotenv.config({ path: "./config/.env" });
@@ -16,7 +15,7 @@ const app = express();
 app.use(cookieParser());
 app.use(cors(
     {
-        origin: 'https://restomasterfrontend.vercel.app',
+        origin: process.env.FRONTEND_URL,
         credentials: true,
     }
 ));

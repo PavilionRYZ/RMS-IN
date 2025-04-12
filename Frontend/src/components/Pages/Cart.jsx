@@ -127,6 +127,7 @@ const Cart = () => {
                 <div>
                   <label className="block text-gray-600 mb-2 font-medium">Table Number</label>
                   <input
+                   required
                     type="text"
                     value={orderDetails.table_no}
                     onChange={(e) =>
@@ -139,6 +140,7 @@ const Cart = () => {
                 <div>
                   <label className="block text-gray-600 mb-2 font-medium">Customer Name</label>
                   <input
+                    required
                     type="text"
                     value={orderDetails.customer_name}
                     onChange={(e) =>

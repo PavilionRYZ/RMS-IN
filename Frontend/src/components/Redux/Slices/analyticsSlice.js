@@ -56,6 +56,14 @@ const analyticsSlice = createSlice({
         clearError: (state) => {
             state.error = null;
         },
+        clearAnalytics: (state) => {
+            state.data = null;
+            state.period = 'monthly';
+            state.startDate = '';
+            state.endDate = '';
+            state.loading = false;
+            state.error = null;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -86,5 +94,5 @@ const analyticsSlice = createSlice({
     },
 });
 
-export const { setPeriod, setStartDate, setEndDate, clearError } = analyticsSlice.actions;
+export const { setPeriod, setStartDate, setEndDate, clearError, clearAnalytics } = analyticsSlice.actions;
 export default analyticsSlice.reducer;

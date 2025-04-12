@@ -36,18 +36,18 @@ const sendResponseWithToken = (user, res) => {
   });
 };
 
-// exports.verifyToken = async (req, res, next) => {
-//   try {
-//     // Token is already verified by middleware (verifyToken), so just return user data
-//     const { password: pass, ...rest } = req.user._doc;
-//     res.status(200).json({
-//       success: true,
-//       user: rest,
-//     });
-//   } catch (error) {
-//     next(new errorHandler(401, "Token verification failed"));
-//   }
-// };
+exports.verifyToken = async (req, res, next) => {
+  try {
+    // Token is already verified by middleware (verifyToken), so just return user data
+    const { password: pass, ...rest } = req.user._doc;
+    res.status(200).json({
+      success: true,
+      user: rest,
+    });
+  } catch (error) {
+    next(new errorHandler(401, "Token verification failed"));
+  }
+};
 
 // Create a new user (Admin Only)
 exports.createUser = async (req, res, next) => {

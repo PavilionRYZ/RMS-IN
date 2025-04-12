@@ -16,7 +16,6 @@ import {
   Select,
   Button,
   Modal,
-  Spin,
   notification,
   Layout,
   Typography,
@@ -31,6 +30,7 @@ import { TableOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion";
 import styled from "styled-components";
 import moment from "moment";
+import Loading from "../Loading/Loading";
 
 const { Content } = Layout;
 const { Title } = Typography;
@@ -76,7 +76,8 @@ const StyledButton = styled(Button)`
 const ManageReservations = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { reservations, loading, error } = useSelector((state) => state.reservation);
+  // Safely handle undefined reservations with a default empty array
+  const { reservations = [], loading, error } = useSelector((state) => state.reservation || { reservations: [] });
   const { user: authUser } = useSelector((state) => state.auth);
 
   const [reservationForm] = Form.useForm();
@@ -248,8 +249,9 @@ const ManageReservations = () => {
     },
   ];
 
-  if (loading && !reservations.length) {
-    return <Spin size="large" tip="Loading reservations..." fullscreen />;
+  // Fix loading check to handle undefined reservations
+  if (loading && (!reservations || reservations.length === 0)) {
+    return <Loading />;
   }
 
   if (error) {
@@ -358,7 +360,7 @@ const ManageReservations = () => {
                   pagination={{
                     current: currentPage,
                     pageSize: pageSize,
-                    total: reservations.length,
+                    total: reservations.length, // Safe now due to default value
                     onChange: (page, pageSize) => {
                       setCurrentPage(page);
                       setPageSize(pageSize);
