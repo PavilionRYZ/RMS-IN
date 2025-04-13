@@ -154,22 +154,20 @@ exports.loginUser = async (req, res, next) => {
 //logout user
 exports.logoutUser = async (req, res, next) => {
   try {
-    res.clearCookie("token", {
+    res.clearCookie('token', {
       httpOnly: true,
-      sameSite: "Strict",
-      secure: process.env.NODE_ENV === "production"
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+      secure: process.env.NODE_ENV === 'production' ? true : false,
     });
-
     res.status(200).json({
       success: true,
-      message: "Sign out successful"
+      message: 'Sign out successful',
+      redirect: '/login', // Suggest redirect to frontend
     });
-
   } catch (error) {
-    next(new errorHandler(500, "Error while signing out user"));
+    next(new errorHandler(500, 'Error while signing out user'));
   }
 };
-
 
 // Admin only: Edit a user's credentials
 exports.updateUser = async (req, res, next) => {

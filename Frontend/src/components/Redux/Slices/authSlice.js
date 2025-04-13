@@ -76,13 +76,22 @@ export const resetPassword = createAsyncThunk(
 );
 
 export const verifyToken = createAsyncThunk(
-    "auth/verifyToken",
-    async (_, { rejectWithValue }) => {
+    'auth/verifyToken',
+    async (_, { rejectWithValue, dispatch }) => {
+        const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+        if (!token) {
+            dispatch(logout());
+            return rejectWithValue('No token found');
+        }
+
         try {
-            const response = await axios.get(`${API_URL}/verify-token`);
+            const response = await axios.get(`${API_URL}/verify-token`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
             return response.data.user;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || "Token verification failed");
+            dispatch(logout());
+            return rejectWithValue(error.response?.data?.message || 'Token verification failed');
         }
     }
 );
