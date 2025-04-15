@@ -23,7 +23,7 @@ class ErrorBoundary extends Component {
     if (this.state.hasError) {
       // Fallback UI when an error occurs
       return (
-        <div className="p-4 text-center min-h-screen bg-gray-100">
+        <div className=" flex flex-col items-center justify-center gap-4 p-4 text-center min-h-screen bg-gray-100">
           <h2 className="text-2xl font-bold text-red-600 mb-4">Something Went Wrong</h2>
           <p className="text-gray-700 mb-4">
             An unexpected error occurred. Please try again or contact support if the issue persists.

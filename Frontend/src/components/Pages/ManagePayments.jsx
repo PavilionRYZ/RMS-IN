@@ -65,7 +65,6 @@ const ManagePayments = () => {
     };
   }, [dispatch, filters, pagination, sort]);
 
-  // Fetch payments for expanded rows
   const handleExpand = (expanded, record) => {
     const newExpandedRowKeys = expanded
       ? [...expandedRowKeys, record._id]
@@ -91,7 +90,7 @@ const ManagePayments = () => {
           position: "top-right",
           autoClose: 3000,
         });
-        dispatch(getPaymentsByOrder(selectedOrderId)); // Refresh payments for the order
+        dispatch(getPaymentsByOrder(selectedOrderId));
       } else {
         toast.error("Failed to update payment", {
           position: "top-right",
@@ -124,10 +123,14 @@ const ManagePayments = () => {
           });
           setIsModalVisible(false);
           form.resetFields();
-          fetchOrders(); // Refresh orders
-          dispatch(getPaymentsByOrder(selectedOrderId)); // Fetch payments for the order
+          fetchOrders();
+          dispatch(getPaymentsByOrder(selectedOrderId));
         } else {
-          toast.error(result.payload || "Failed to create payment", {
+          const errorMessage =
+            typeof result.payload === "object" && result.payload?.message
+              ? result.payload.message
+              : "Failed to create payment";
+          toast.error(errorMessage, {
             position: "top-right",
             autoClose: 3000,
           });
@@ -238,28 +241,31 @@ const ManagePayments = () => {
     {
       title: "Actions",
       key: "actions",
-      render: (record) => (
-        <div className="flex gap-2">
-         <Button
-  type="primary"
-  size="medium"
-  onClick={() => navigate(`/view-order/${record._id}`)}
-  disabled={record.status !== "completed"}
->
-  View Details
-</Button>
-          {!record.payment && record.status === "completed" && (
+      render: (record) => {
+        const payment = payments.find((p) => p.order === record._id);
+        return (
+          <div className="flex gap-2">
             <Button
               type="primary"
               size="medium"
-              onClick={() => showCreatePaymentModal(record._id)}
-              loading={paymentLoading}
+              onClick={() => navigate(`/view-order/${record._id}`)}
+              disabled={!payment || payment.payment_status !== "completed"}
             >
-              Create Payment
+              View Details
             </Button>
-          )}
-        </div>
-      ),
+            {!payment && record.status === "completed" && (
+              <Button
+                type="primary"
+                size="medium"
+                onClick={() => showCreatePaymentModal(record._id)}
+                loading={paymentLoading}
+              >
+                Create Payment
+              </Button>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
@@ -297,7 +303,6 @@ const ManagePayments = () => {
     });
   };
 
-  // Expanded row to show payment details
   const expandedRowRender = (record) => {
     const payment = payments.find((p) => p.order === record._id);
     const columns = [
@@ -365,10 +370,8 @@ const ManagePayments = () => {
   return (
     <Fragment>
       <div className="main-div flex">
-        <FloatingSidebar/>
-        <div
-          className={`content w-full p-6 transition-all duration-300`}
-        >
+        <FloatingSidebar />
+        <div className="content w-full p-6 transition-all duration-300">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold">Manage Payments</h1>
             <Button
@@ -411,14 +414,11 @@ const ManagePayments = () => {
               <Option value="failed">Failed</Option>
               <Option value="refunded">Refunded</Option>
             </Select>
-            <RangePicker
-              onChange={handleDateRangeChange}
-              format="YYYY-MM-DD"
-            />
+            <RangePicker onChange={handleDateRangeChange} format="YYYY-MM-DD" />
           </div>
           <Table
             columns={columns}
-            dataSource={orders || []} // Ensure dataSource is always an array
+            dataSource={orders || []}
             rowKey="_id"
             loading={orderLoading || paymentLoading}
             onChange={handleTableChange}
@@ -442,13 +442,19 @@ const ManagePayments = () => {
           </div>
           {(orderError || paymentError) && (
             <div className="mt-4 text-red-500">
-              Error: {orderError || paymentError}
+              Error:{" "}
+              {orderError
+                ? typeof orderError === "object" && orderError?.message
+                  ? orderError.message
+                  : String(orderError)
+                : typeof paymentError === "object" && paymentError?.message
+                ? paymentError.message
+                : String(paymentError)}
             </div>
           )}
         </div>
       </div>
 
-      {/* Modal for creating payment */}
       <Modal
         title="Create Payment"
         open={isModalVisible}
