@@ -241,31 +241,28 @@ const ManagePayments = () => {
     {
       title: "Actions",
       key: "actions",
-      render: (record) => {
-        const payment = payments.find((p) => p.order === record._id);
-        return (
-          <div className="flex gap-2">
+      render: (record) => (
+        <div className="flex gap-2">
+          <Button
+            type="primary"
+            size="medium"
+            onClick={() => navigate(`/view-order/${record._id}`)}
+            disabled={record.status !== "completed"}
+          >
+            View Details
+          </Button>
+          {!record.payment && record.status === "completed" && (
             <Button
               type="primary"
               size="medium"
-              onClick={() => navigate(`/view-order/${record._id}`)}
-              disabled={!payment || payment.payment_status !== "completed"}
+              onClick={() => showCreatePaymentModal(record._id)}
+              loading={paymentLoading}
             >
-              View Details
+              Create Payment
             </Button>
-            {!payment && record.status === "completed" && (
-              <Button
-                type="primary"
-                size="medium"
-                onClick={() => showCreatePaymentModal(record._id)}
-                loading={paymentLoading}
-              >
-                Create Payment
-              </Button>
-            )}
-          </div>
-        );
-      },
+          )}
+        </div>
+      ),
     },
   ];
 
