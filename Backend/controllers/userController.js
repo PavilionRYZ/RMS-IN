@@ -29,6 +29,7 @@ const sendResponseWithToken = (user, res) => {
     sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
     secure: process.env.NODE_ENV === "production" ? true : false,
     maxAge: 1 * 24 * 60 * 60 * 1000,
+    path: '/',
   }).status(200).json({
     success: true,
     message: "User logged in successfully",

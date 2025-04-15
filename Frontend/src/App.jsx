@@ -44,6 +44,7 @@ const App = () => {
     }
   }, [loading, isAuthenticated, navigate]);
 
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Add SetupInterceptors here to initialize interceptors */}
