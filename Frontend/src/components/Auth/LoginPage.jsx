@@ -73,7 +73,7 @@ const LoginPage = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-cover bg-center"
+      className="min-h-screen flex flex-col gap-10 items-center justify-center bg-cover bg-center"
       style={{
         backgroundImage: `url('https://images.unsplash.com/photo-1555396273-36734b2d1fea?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')`,
       }}
@@ -147,6 +147,21 @@ const LoginPage = () => {
            Reset Password
           </a>
         </p>
+      </div>
+      <div
+            className="info relative z-10 bg-white p-6 rounded-lg shadow-md w-full max-w-md cursor-pointer transition-transform transform hover:scale-105 hover:shadow-xl"
+            onClick={() => {
+              setEmail('subhrasundarsinha21@gmail.com');
+              setPassword('newpass12');
+              toast.info('Admin credentials filled!', toastOptions);
+            }}
+          >
+            <p className="text-lg font-semibold mb-2 text-gray-800">Admin Credentials:</p>
+            <div className="flex flex-col gap-2 text-sm text-gray-700">
+              <span className="bg-gray-100 p-2 rounded border border-gray-300">📧 Email: <strong>subhrasundarsinha21@gmail.com</strong></span>
+              <span className="bg-gray-100 p-2 rounded border border-gray-300">🔒 Password: <strong>newpass12</strong></span>
+            </div>
+            <p className="text-xs text-gray-500 mt-2 italic">Click to autofill the login form</p>
       </div>
       <ToastContainer />
     </div>
