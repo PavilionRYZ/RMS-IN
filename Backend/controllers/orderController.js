@@ -1,6 +1,7 @@
 const Order = require("../models/order");
 const MenuItem = require("../models/menu");
 const errorHandler = require("../utils/errorHandler");
+const mongoose = require("mongoose");
 // Place an order and update stock
 exports.placeOrder = async (req, res, next) => {
     try {
@@ -63,88 +64,185 @@ exports.placeOrder = async (req, res, next) => {
 };
 
 // Get all orders with filters, search, pagination & sorting
+// exports.getAllOrders = async (req, res, next) => {
+//     try {
+//         let { status, startDate, endDate, search, page, limit, sortBy, order } = req.query;
+//         let filters = {};
+
+//         // Filter by status (if provided)
+//         if (status) {
+//             filters.status = status;
+//         }
+
+//         // Filter by time range (if provided)
+//         if (startDate && endDate) {
+//             filters.createdAt = {
+//                 $gte: new Date(startDate),
+//                 $lte: new Date(endDate),
+//             };
+//         } else if (startDate) {
+//             filters.createdAt = { $gte: new Date(startDate) };
+//         } else if (endDate) {
+//             filters.createdAt = { $lte: new Date(endDate) };
+//         }
+
+//         // Search by customer name or table number (if provided)
+//         if (search) {
+//             filters.$or = [
+//                 { customer_name: { $regex: search, $options: "i" } }, // Case-insensitive search
+//                 { table_no: { $regex: search, $options: "i" } },
+//             ];
+//         }
+
+//         // Pagination settings
+//         const pageNumber = parseInt(page) || 1; // Default: page 1
+//         const pageSize = parseInt(limit) || 10; // Default: 10 results per page
+//         const skip = (pageNumber - 1) * pageSize;
+
+//         // Sorting settings
+//         let sortOptions = {};
+//         if (sortBy) {
+//             const sortOrder = order === "asc" ? 1 : -1;
+//             sortOptions[sortBy] = sortOrder;
+//         } else {
+//             sortOptions["createdAt"] = -1; // Default: latest orders first
+//         }
+
+//         // Fetch orders with filters, pagination & sorting
+//         const orders = await Order.find(filters)
+//             .populate("items.menu_item")
+//             .sort(sortOptions)
+//             .skip(skip)
+//             .limit(pageSize);
+
+//         // Get total count of filtered orders (for pagination)
+//         const totalOrders = await Order.countDocuments(filters);
+
+//         res.status(200).json({
+//             success: true,
+//             count: orders.length,
+//             totalOrders,
+//             currentPage: pageNumber,
+//             totalPages: Math.ceil(totalOrders / pageSize),
+//             orders,
+//         });
+//     } catch (error) {
+//         // console.error("Error fetching orders:", error);
+//         next(errorHandler(500, "Failed to retrieve orders"));
+//     }
+// };
+
+
+
 exports.getAllOrders = async (req, res, next) => {
     try {
-        let { status, startDate, endDate, search, page, limit, sortBy, order } = req.query;
-        let filters = {};
+        const {
+            page = 1,
+            limit = 10,
+            sortBy = "createdAt",
+            order = "desc",
+            orderStatus,
+            paymentStatus,
+            search,
+            startDate,
+            endDate,
+        } = req.query;
 
-        // Filter by status (if provided)
-        if (status) {
-            filters.status = status;
+        // Build query
+        const query = {};
+        if (orderStatus) query.status = orderStatus;
+        if (search) {
+            query.customer_name = { $regex: search, $options: "i" };
         }
-
-        // Filter by time range (if provided)
         if (startDate && endDate) {
-            filters.createdAt = {
+            query.createdAt = {
                 $gte: new Date(startDate),
                 $lte: new Date(endDate),
             };
-        } else if (startDate) {
-            filters.createdAt = { $gte: new Date(startDate) };
-        } else if (endDate) {
-            filters.createdAt = { $lte: new Date(endDate) };
         }
 
-        // Search by customer name or table number (if provided)
-        if (search) {
-            filters.$or = [
-                { customer_name: { $regex: search, $options: "i" } }, // Case-insensitive search
-                { table_no: { $regex: search, $options: "i" } },
-            ];
+        // Handle payment status filter
+        if (paymentStatus) {
+            const paymentQuery = { payment_status: paymentStatus };
+            const payments = await require("../models/payments").find(paymentQuery).select("order");
+            const orderIds = payments.map((p) => p.order);
+            query._id = { $in: orderIds };
         }
 
-        // Pagination settings
-        const pageNumber = parseInt(page) || 1; // Default: page 1
-        const pageSize = parseInt(limit) || 10; // Default: 10 results per page
-        const skip = (pageNumber - 1) * pageSize;
+        // Pagination and sorting
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+        const skip = (pageNum - 1) * limitNum;
+        const sort = { [sortBy]: order === "asc" ? 1 : -1 };
 
-        // Sorting settings
-        let sortOptions = {};
-        if (sortBy) {
-            const sortOrder = order === "asc" ? 1 : -1;
-            sortOptions[sortBy] = sortOrder;
-        } else {
-            sortOptions["createdAt"] = -1; // Default: latest orders first
-        }
-
-        // Fetch orders with filters, pagination & sorting
-        const orders = await Order.find(filters)
-            .populate("items.menu_item")
-            .sort(sortOptions)
-            .skip(skip)
-            .limit(pageSize);
-
-        // Get total count of filtered orders (for pagination)
-        const totalOrders = await Order.countDocuments(filters);
+        // Fetch orders with population of payment
+        const [orders, total] = await Promise.all([
+            Order.find(query)
+                .populate("payment")
+                .sort(sort)
+                .skip(skip)
+                .limit(limitNum)
+                .lean(),
+            Order.countDocuments(query),
+        ]);
 
         res.status(200).json({
             success: true,
-            count: orders.length,
-            totalOrders,
-            currentPage: pageNumber,
-            totalPages: Math.ceil(totalOrders / pageSize),
-            orders,
+            data: {
+                orders,
+                total,
+                page: pageNum,
+                limit: limitNum,
+                totalPages: Math.ceil(total / limitNum),
+            },
         });
     } catch (error) {
-        // console.error("Error fetching orders:", error);
-        next(errorHandler(500, "Failed to retrieve orders"));
+        console.error("Error fetching orders:", error);
+        next(new errorHandler(500, "Failed to fetch orders"));
     }
 };
 
 // Get order by ID
+// exports.getOrderById = async (req, res, next) => {
+//     try {
+//         const orderId = req.params.orderId;
+//         const order = await Order.findById(orderId).populate("items.menu_item");
+//         if (!order) {
+//             return next(new errorHandler(404, `Order not found: ${orderId}`));
+//         }
+//         res.json(order);
+//     } catch (error) {
+//         // console.error("Error fetching order:", error);
+//         next(new errorHandler(500, "Failed to fetch order"));
+//     }
+// }
+
 exports.getOrderById = async (req, res, next) => {
     try {
-        const orderId = req.params.orderId;
-        const order = await Order.findById(orderId).populate("items.menu_item");
-        if (!order) {
-            return next(new errorHandler(404, `Order not found: ${orderId}`));
+        const { orderId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            return next(new errorHandler(400, "Invalid Order ID format"));
         }
-        res.json(order);
+
+        const order = await Order.findById(orderId)
+            .populate("items.menu_item")
+            .populate("payment")
+            .lean();
+
+        if (!order) {
+            return next(new errorHandler(404, "Order not found"));
+        }
+
+        res.status(200).json({
+            success: true,
+            order,
+        });
     } catch (error) {
-        // console.error("Error fetching order:", error);
+        console.error("Error fetching order:", error);
         next(new errorHandler(500, "Failed to fetch order"));
     }
-}
+};
 
 // Update order status
 exports.updateOrderStatus = async (req, res, next) => {

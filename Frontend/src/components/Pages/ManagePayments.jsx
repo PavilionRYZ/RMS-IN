@@ -72,7 +72,7 @@ const ManagePayments = () => {
     setExpandedRowKeys(newExpandedRowKeys);
 
     if (expanded && record.payment) {
-      dispatch(getPaymentsByOrder(record._id));
+      dispatch(getPaymentsByOrder({ orderId: record._id, page: 1, limit: 10 }));
     }
   };
 
@@ -84,15 +84,25 @@ const ManagePayments = () => {
       });
       return;
     }
+
+    const payment = payments.find((p) => p._id === paymentId);
+    if (payment?.payment_status === "completed") {
+      toast.error("Cannot modify a completed payment", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+
     dispatch(updatePaymentStatus({ paymentId, payment_status, payment_method })).then((result) => {
       if (result.meta.requestStatus === "fulfilled") {
         toast.success("Payment updated successfully", {
           position: "top-right",
           autoClose: 3000,
         });
-        dispatch(getPaymentsByOrder(selectedOrderId));
+        dispatch(getPaymentsByOrder({ orderId: selectedOrderId, page: 1, limit: 10 }));
       } else {
-        toast.error("Failed to update payment", {
+        toast.error(result.payload?.message || "Failed to update payment", {
           position: "top-right",
           autoClose: 3000,
         });
@@ -124,7 +134,7 @@ const ManagePayments = () => {
           setIsModalVisible(false);
           form.resetFields();
           fetchOrders();
-          dispatch(getPaymentsByOrder(selectedOrderId));
+          dispatch(getPaymentsByOrder({ orderId: selectedOrderId, page: 1, limit: 10 }));
         } else {
           const errorMessage =
             typeof result.payload === "object" && result.payload?.message
@@ -188,7 +198,7 @@ const ManagePayments = () => {
       title: "Payment Method",
       key: "payment_method",
       render: (record) => {
-        const payment = payments.find((p) => p.order === record._id);
+        const payment = record.payment;
         return payment ? (
           <Select
             value={payment.payment_method}
@@ -196,7 +206,12 @@ const ManagePayments = () => {
             onChange={(value) =>
               handlePaymentUpdate(payment._id, payment.payment_status, value, record.status)
             }
-            disabled={paymentLoading || record.status !== "completed" || record.status === "cancelled"}
+            disabled={
+              paymentLoading ||
+              record.status !== "completed" ||
+              payment.payment_status === "completed" ||
+              record.status === "cancelled"
+            }
           >
             <Option value="cash">Cash</Option>
             <Option value="card">Card</Option>
@@ -211,7 +226,7 @@ const ManagePayments = () => {
       title: "Payment Status",
       key: "payment_status",
       render: (record) => {
-        const payment = payments.find((p) => p.order === record._id);
+        const payment = record.payment;
         return payment ? (
           <Select
             value={payment.payment_status}
@@ -219,7 +234,12 @@ const ManagePayments = () => {
             onChange={(value) =>
               handlePaymentUpdate(payment._id, value, payment.payment_method, record.status)
             }
-            disabled={paymentLoading || record.status !== "completed" || record.status === "cancelled"}
+            disabled={
+              paymentLoading ||
+              record.status !== "completed" ||
+              payment.payment_status === "completed" ||
+              record.status === "cancelled"
+            }
           >
             <Option value="pending">Pending</Option>
             <Option value="completed">Completed</Option>
@@ -247,7 +267,7 @@ const ManagePayments = () => {
             type="primary"
             size="medium"
             onClick={() => navigate(`/view-order/${record._id}`)}
-            disabled={record.status !== "completed"}
+            disabled={record.payment?.payment_status !== "completed"}
           >
             View Details
           </Button>
@@ -277,6 +297,7 @@ const ManagePayments = () => {
       startDate: dates?.[0]?.toISOString(),
       endDate: dates?.[1]?.toISOString(),
     }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const handleTableChange = (pagination, filters, sorter) => {
@@ -301,7 +322,7 @@ const ManagePayments = () => {
   };
 
   const expandedRowRender = (record) => {
-    const payment = payments.find((p) => p.order === record._id);
+    const payment = record.payment;
     const columns = [
       {
         title: "Payment ID",
