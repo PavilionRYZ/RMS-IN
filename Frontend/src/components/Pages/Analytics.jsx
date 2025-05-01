@@ -1,4 +1,3 @@
-// src/components/AnalyticsDashboard.jsx
 import { Fragment, useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
@@ -36,11 +35,42 @@ const AnalyticsDashboard = () => {
   const { menu, loading: menuLoading, error: menuError } = useSelector((state) => state.menu);
   const [isExportOpen, setIsExportOpen] = useState(false);
 
+  // Set default date ranges based on period
   useEffect(() => {
-    if (!data && !analyticsLoading) {
+    const now = new Date();
+    let newStartDate, newEndDate;
+
+    switch (period) {
+      case 'daily':
+        newStartDate = now.toISOString().split('T')[0];
+        newEndDate = newStartDate;
+        break;
+      case 'weekly': {
+        const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+        newStartDate = weekStart.toISOString().split('T')[0];
+        newEndDate = new Date(weekStart.setDate(weekStart.getDate() + 6)).toISOString().split('T')[0];
+        break;
+      }
+      case 'monthly':
+        newStartDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        newEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+        break;
+      default:
+        newStartDate = startDate;
+        newEndDate = endDate;
+    }
+
+    if (newStartDate !== startDate || newEndDate !== endDate) {
+      dispatch(setStartDate(newStartDate));
+      dispatch(setEndDate(newEndDate));
+    }
+  }, [period, dispatch, startDate, endDate]);
+
+  useEffect(() => {
+    if (startDate && endDate) {
       dispatch(fetchAnalytics({ period, startDate, endDate }));
     }
-  }, [dispatch, period, startDate, endDate, data, analyticsLoading]);
+  }, [dispatch, period, startDate, endDate]);
 
   useEffect(() => {
     if (!menu.length && !menuLoading) {
@@ -48,12 +78,20 @@ const AnalyticsDashboard = () => {
     }
   }, [dispatch, menu, menuLoading]);
 
-  const handleGenerateReport = () => {
-    dispatch(generateAnalytics({ period, startDate, endDate }));
-  };
+  // Debugging: Log inventory data
+  useEffect(() => {
+    if (data?.inventoryAnalysis) {
+      console.log("Frontend Inventory Stock:", JSON.stringify(data.inventoryAnalysis.stock, null, 2));
+      console.log("Frontend Inventory Usage:", JSON.stringify(data.inventoryAnalysis.usage, null, 2));
+      console.log("Frontend Low Stock:", JSON.stringify(data.inventoryAnalysis.lowStock, null, 2));
+    }
+  }, [data]);
 
-  // Debug data
-  // console.log('Analytics Data:', data);
+  const handleGenerateReport = () => {
+    if (startDate && endDate) {
+      dispatch(generateAnalytics({ period, startDate, endDate }));
+    }
+  };
 
   // Export functions
   const exportToJSON = () => {
@@ -81,18 +119,29 @@ const AnalyticsDashboard = () => {
         ['Order Status', ''],
         ['Confirmed', data.orderStatus?.confirmed || 0],
         ['Cancelled', data.orderStatus?.cancelled || 0],
+        ['Inventory', ''],
+        ['Added Count', data.inventory?.added?.count || 0],
+        ['Added Value', data.inventory?.added?.value || 0],
+        ['Used Count', data.inventory?.used?.count || 0],
+        ['Used Value', data.inventory?.used?.value || 0],
         ['Inventory Analysis - Stock', ''],
         ...(data.inventoryAnalysis?.stock?.map((item, index) => [
-          `${index + 1}. ${item.item?.name || 'Unknown'} (Stock)`,
+          `${index + 1}. ${item.item?.name || 'Unknown Item'} (Stock)`,
           item.currentStock || 0,
           item.unitCost || 0,
           item.totalValue || 0,
         ]) || []),
         ['Inventory Analysis - Usage', ''],
         ...(data.inventoryAnalysis?.usage?.map((item, index) => [
-          `${index + 1}. ${item.item?.name || 'Unknown'} (Used)`,
+          `${index + 1}. ${item.item?.name || 'Unknown Item'} (Used)`,
           item.usedQuantity || 0,
           item.totalCost || 0,
+        ]) || []),
+        ['Low Stock Alerts', ''],
+        ...(data.inventoryAnalysis?.lowStock?.map((item, index) => [
+          `${index + 1}. ${item.name || 'Unknown Item'} (Low Stock)`,
+          item.currentStock || 0,
+          item.unitCost || 0,
         ]) || []),
         ['Top Selling Items', ''],
         ...(data.topSellingItems?.map((item, index) => [
@@ -155,11 +204,22 @@ const AnalyticsDashboard = () => {
       doc.text(`Cancelled: ${data.orderStatus?.cancelled || 0}`, 20, y);
       y += 10;
 
+      doc.text('Inventory:', 20, y);
+      y += 10;
+      doc.text(`Added Count: ${data.inventory?.added?.count || 0}`, 20, y);
+      y += 10;
+      doc.text(`Added Value: $${data.inventory?.added?.value || 0}`, 20, y);
+      y += 10;
+      doc.text(`Used Count: ${data.inventory?.used?.count || 0}`, 20, y);
+      y += 10;
+      doc.text(`Used Value: $${data.inventory?.used?.value || 0}`, 20, y);
+      y += 10;
+
       doc.text('Inventory Analysis - Stock:', 20, y);
       y += 10;
       data.inventoryAnalysis?.stock?.forEach((item, index) => {
         doc.text(
-          `${index + 1}. ${item.item?.name || 'Unknown'}: ${item.currentStock || 0} ($${item.unitCost || 0}/unit, Total: $${item.totalValue || 0})`,
+          `${index + 1}. ${item.item?.name || 'Unknown Item'}: ${item.currentStock || 0} ($${item.unitCost || 0}/unit, Total: $${item.totalValue || 0})`,
           20,
           y
         );
@@ -170,7 +230,18 @@ const AnalyticsDashboard = () => {
       y += 10;
       data.inventoryAnalysis?.usage?.forEach((item, index) => {
         doc.text(
-          `${index + 1}. ${item.item?.name || 'Unknown'}: ${item.usedQuantity || 0} (Total Cost: $${item.totalCost || 0})`,
+          `${index + 1}. ${item.item?.name || 'Unknown Item'}: ${item.usedQuantity || 0} (Total Cost: $${item.totalCost || 0})`,
+          20,
+          y
+        );
+        y += 10;
+      });
+
+      doc.text('Low Stock Alerts:', 20, y);
+      y += 10;
+      data.inventoryAnalysis?.lowStock?.forEach((item, index) => {
+        doc.text(
+          `${index + 1}. ${item.name || 'Unknown Item'}: ${item.currentStock || 0} ($${item.unitCost || 0}/unit)`,
           20,
           y
         );
@@ -189,7 +260,7 @@ const AnalyticsDashboard = () => {
     }
   };
 
-  // Chart data with robust fallbacks and top 10 limit for readability
+  // Chart data
   const salesChartData = {
     labels: ['Dine-in', 'Takeaway', 'Online'],
     datasets: [
@@ -226,7 +297,7 @@ const AnalyticsDashboard = () => {
         ? data.topSellingItems.map((topItem) => {
             const itemId = topItem.item?._id || topItem._id;
             const menuItem = menu.find((item) => item._id === itemId);
-            return menuItem?.name || 'Loading...';
+            return menuItem?.name || 'Unknown';
           })
         : ['No Data'],
     datasets: [
@@ -241,61 +312,59 @@ const AnalyticsDashboard = () => {
     ],
   };
 
-  // const inventoryUsageChartData = {
-  //   labels:
-  //     data?.inventoryAnalysis?.usage?.length > 0
-  //       ? data.inventoryAnalysis.usage
-  //           .slice(0, 10) // Limit to top 10 for readability
-  //           .map((item) => item.item?.name || 'Unknown')
-  //       : ['No Data'],
-  //   datasets: [
-  //     {
-  //       label: 'Inventory Usage (Quantity)',
-  //       data:
-  //         data?.inventoryAnalysis?.usage?.length > 0
-  //           ? data.inventoryAnalysis.usage
-  //               .slice(0, 10)
-  //               .map((item) => item.usedQuantity || 0)
-  //           : [0],
-  //       backgroundColor: '#FF6384',
-  //     },
-  //     {
-  //       label: 'Inventory Usage (Cost)',
-  //       data:
-  //         data?.inventoryAnalysis?.usage?.length > 0
-  //           ? data.inventoryAnalysis.usage.slice(0, 10).map((item) => item.totalCost || 0)
-  //           : [0],
-  //       backgroundColor: '#FF9F40',
-  //     },
-  //   ],
-  // };
+  const inventoryUsageChartData = {
+    labels:
+      data?.inventoryAnalysis?.usage?.length > 0
+        ? data.inventoryAnalysis.usage
+            .slice(0, 10)
+            .map((item) => item.item?.name || 'Unknown Item')
+        : ['No Usage Data'],
+    datasets: [
+      {
+        label: 'Inventory Usage (Quantity)',
+        data:
+          data?.inventoryAnalysis?.usage?.length > 0
+            ? data.inventoryAnalysis.usage.slice(0, 10).map((item) => item.usedQuantity || 0)
+            : [0],
+        backgroundColor: '#FF6384',
+      },
+      {
+        label: 'Inventory Usage (Cost)',
+        data:
+          data?.inventoryAnalysis?.usage?.length > 0
+            ? data.inventoryAnalysis.usage.slice(0, 10).map((item) => item.totalCost || 0)
+            : [0],
+        backgroundColor: '#FF9F40',
+      },
+    ],
+  };
 
-  // const inventoryStockChartData = {
-  //   labels:
-  //     data?.inventoryAnalysis?.stock?.length > 0
-  //       ? data.inventoryAnalysis.stock
-  //           .slice(0, 10) // Limit to top 10 for readability
-  //           .map((item) => item.item?.name || 'Unknown')
-  //       : ['No Data'],
-  //   datasets: [
-  //     {
-  //       label: 'Current Stock (Quantity)',
-  //       data:
-  //         data?.inventoryAnalysis?.stock?.length > 0
-  //           ? data.inventoryAnalysis.stock.slice(0, 10).map((item) => item.currentStock || 0)
-  //           : [0],
-  //       backgroundColor: '#4BC0C0',
-  //     },
-  //     {
-  //       label: 'Current Stock (Value)',
-  //       data:
-  //         data?.inventoryAnalysis?.stock?.length > 0
-  //           ? data.inventoryAnalysis.stock.slice(0, 10).map((item) => item.totalValue || 0)
-  //           : [0],
-  //       backgroundColor: '#36A2EB',
-  //     },
-  //   ],
-  // };
+  const inventoryStockChartData = {
+    labels:
+      data?.inventoryAnalysis?.stock?.length > 0
+        ? data.inventoryAnalysis.stock
+            .slice(0, 10)
+            .map((item) => item.item?.name || 'Unknown Item')
+        : ['No Stock Data'],
+    datasets: [
+      {
+        label: 'Current Stock (Quantity)',
+        data:
+          data?.inventoryAnalysis?.stock?.length > 0
+            ? data.inventoryAnalysis.stock.slice(0, 10).map((item) => item.currentStock || 0)
+            : [0],
+        backgroundColor: '#4BC0C0',
+      },
+      {
+        label: 'Current Stock (Value)',
+        data:
+          data?.inventoryAnalysis?.stock?.length > 0
+            ? data.inventoryAnalysis.stock.slice(0, 10).map((item) => item.totalValue || 0)
+            : [0],
+        backgroundColor: '#36A2EB',
+      },
+    ],
+  };
 
   return (
     <Fragment>
@@ -342,7 +411,7 @@ const AnalyticsDashboard = () => {
 
               <button
                 onClick={handleGenerateReport}
-                disabled={analyticsLoading}
+                disabled={analyticsLoading || !startDate || !endDate}
                 className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-400"
               >
                 {analyticsLoading ? 'Generating...' : 'Generate Report'}
@@ -439,6 +508,25 @@ const AnalyticsDashboard = () => {
               </div>
             )}
 
+            {/* Low Stock Alerts */}
+            {data?.inventoryAnalysis?.lowStock?.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-red-100 p-4 rounded-lg mb-6"
+              >
+                <h3 className="font-semibold text-red-700 mb-2">Low Stock Alerts</h3>
+                <ul className="list-disc pl-5">
+                  {data.inventoryAnalysis.lowStock.map((item, index) => (
+                    <li key={index} className="text-red-600">
+                      {item.name || 'Unknown Item'}: {item.currentStock} units remaining ($
+                      {item.unitCost || 0}/unit)
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
+
             {/* Charts */}
             {data && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -469,7 +557,7 @@ const AnalyticsDashboard = () => {
                   <Bar data={topItemsChartData} options={{ responsive: true }} />
                 </motion.div>
 
-                {/* <motion.div
+                <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="bg-gray-100 p-4 rounded-lg col-span-1 lg:col-span-2"
@@ -525,9 +613,11 @@ const AnalyticsDashboard = () => {
                       }}
                     />
                   ) : (
-                    <p className="text-center text-gray-500">No inventory stock data available</p>
+                    <p className="text-center text-gray-500">
+                      No inventory stock data available. Check if inventory items are configured.
+                    </p>
                   )}
-                </motion.div> */}
+                </motion.div>
               </div>
             )}
           </motion.div>
