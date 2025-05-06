@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { Fragment, useEffect, useState, useCallback } from "react";
+import { Fragment, useEffect, useState, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import FloatingSidebar from "../Layout/FloatingSidebar";
@@ -43,6 +43,9 @@ import { MdRestaurantMenu } from "react-icons/md";
 import { motion } from "framer-motion";
 import styled from "styled-components";
 import { debounce } from "lodash";
+import React from "react";
+import PropTypes from "prop-types";
+
 
 const { Content } = Layout;
 const { Title } = Typography;
@@ -64,6 +67,11 @@ const StyledTable = styled(Table)`
     background: #1890ff;
     color: white;
     font-weight: 600;
+    cursor: default !important;
+    transition: none !important;
+  }
+  .ant-table-thead > tr > th:hover {
+    background: #1890ff !important;
   }
   .ant-table-row {
     transition: background 0.2s ease;
@@ -79,6 +87,37 @@ const StyledButton = styled(Button)`
   font-weight: 500;
 `;
 
+// Memoized MenuItemsList component
+const MenuItemsList = React.memo(function MenuItemsList({ menu, loading, totalItems, pagination, columns, onPaginationChange }) {
+  return (
+    <StyledCard id="menu-items-list">
+      <Title level={4} style={{ color: "#2d3748" }}>
+        All Menu Items
+      </Title>
+      <StyledTable
+        columns={columns}
+        dataSource={menu}
+        rowKey="_id"
+        locale={{ emptyText: "No menu items found." }}
+        scroll={{ x: true }}
+        pagination={false}
+        loading={loading}
+      />
+      <div style={{ marginTop: "16px", textAlign: "right" }}>
+        <Pagination
+          current={pagination.page}
+          pageSize={pagination.limit}
+          total={totalItems}
+          onChange={onPaginationChange}
+          showSizeChanger
+          pageSizeOptions={["10", "20", "50"]}
+          showTotal={(total) => `Total ${total} items`}
+        />
+      </div>
+    </StyledCard>
+  );
+});
+
 const ManageMenu = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -92,7 +131,7 @@ const ManageMenu = () => {
   const [uploading, setUploading] = useState(false);
   const [actionCompleted, setActionCompleted] = useState(null);
   const [pagination, setPagination] = useState({ page: 1, limit: 10 });
-  const [totalItems, setTotalItems] = useState(0); // Use total items for pagination
+  const [totalItems, setTotalItems] = useState(0);
   const [filters, setFilters] = useState({
     search: "",
     category: "",
@@ -101,6 +140,17 @@ const ManageMenu = () => {
     maxPrice: null,
     inStock: false,
   });
+  const [searchInput, setSearchInput] = useState("");
+
+  // Debounced search handler
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((value) => {
+        setFilters((prev) => ({ ...prev, search: value }));
+        setPagination((prev) => ({ ...prev, page: 1 }));
+      }, 500),
+    []
+  );
 
   // Fetch menu items with filters and pagination
   const fetchMenuItems = useCallback(() => {
@@ -118,8 +168,7 @@ const ManageMenu = () => {
     dispatch(getMenuItems(queryParams))
       .unwrap()
       .then((result) => {
-        // Update total items for pagination
-        setTotalItems(result.totalItems || result.count || 0);
+        setTotalItems(result.totalItems || 0);
       })
       .catch((err) => {
         notification.error({
@@ -283,19 +332,18 @@ const ManageMenu = () => {
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
-    setPagination((prev) => ({ ...prev, page: 1 })); // Reset to first page on filter change
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
-  // const handlePaginationChange = (page, pageSize) => {
-  //   setPagination({ page, limit: pageSize });
-  // };
+  const handlePaginationChange = (page, pageSize) => {
+    setPagination({ page, limit: pageSize });
+  };
 
   const columns = [
     {
       title: "Name",
       dataIndex: "name",
       key: "name",
-      sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
       title: "Category",
@@ -312,7 +360,6 @@ const ManageMenu = () => {
       dataIndex: "price",
       key: "price",
       render: (price) => `$${price.toFixed(2)}`,
-      sorter: (a, b) => a.price - b.price,
     },
     {
       title: "Stock",
@@ -421,11 +468,7 @@ const ManageMenu = () => {
 
   if (error && !menu.length) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}
-      >
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
         <StyledCard>
           <p style={{ color: "#ff4d4f", fontSize: "18px", marginBottom: "16px" }}>{error.message}</p>
           <StyledButton type="primary" onClick={fetchMenuItems}>
@@ -435,7 +478,7 @@ const ManageMenu = () => {
             Back to Dashboard
           </StyledButton>
         </StyledCard>
-      </motion.div>
+      </div>
     );
   }
 
@@ -443,24 +486,14 @@ const ManageMenu = () => {
     <Fragment>
       <div className="main-div flex">
         <FloatingSidebar />
-        <motion.div
-          className={`content w-full p-6 transition-all duration-300`}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="content w-full p-6">
           <Content style={{ padding: "24px", background: "#f0f2f5" }}>
-            <motion.div
-              className="header-div margin flex items-center gap-2 mb-6"
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
+            <div className="header-div margin flex items-center gap-2 mb-6">
               <MdRestaurantMenu className="text-4xl text-blue-500" />
               <Title level={2} style={{ color: "#1d3557", margin: 0 }}>
                 Manage Menu
               </Title>
-            </motion.div>
+            </div>
 
             {/* Create New Menu Item Form */}
             <StyledCard style={{ marginBottom: "24px" }}>
@@ -608,20 +641,23 @@ const ManageMenu = () => {
             </StyledCard>
 
             {/* Filter and Search Section */}
-            {/* <StyledCard style={{ marginBottom: "24px" }}>
+            <StyledCard style={{ marginBottom: "24px" }}>
               <Title level={4} style={{ color: "#2d3748" }}>
                 Filter Menu Items
               </Title>
               <Row gutter={[16, 16]}>
-                <Col span={6}>
+                <Col xs={24} sm={12} md={6}>
                   <Input
                     placeholder="Search by name"
-                    value={filters.search}
-                    onChange={(e) => handleFilterChange("search", e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => {
+                      setSearchInput(e.target.value);
+                      debouncedSearch(e.target.value);
+                    }}
                     style={{ borderRadius: "6px" }}
                   />
                 </Col>
-                <Col span={6}>
+                <Col xs={24} sm={12} md={6}>
                   <Select
                     placeholder="Filter by category"
                     value={filters.category || undefined}
@@ -634,9 +670,11 @@ const ManageMenu = () => {
                     <Option value="beverages">Beverages</Option>
                     <Option value="mocktails">Mocktails</Option>
                     <Option value="cocktails">Cocktails</Option>
+                    <Option value="others">Snaks</Option>
+                    <Option value="desserts">Desserts</Option>
                   </Select>
                 </Col>
-                <Col span={6}>
+                <Col xs={24} sm={12} md={6}>
                   <Select
                     placeholder="Filter by type"
                     value={filters.type || undefined}
@@ -650,7 +688,7 @@ const ManageMenu = () => {
                     <Option value="Continental">Continental</Option>
                   </Select>
                 </Col>
-                <Col span={6}>
+                <Col xs={24} sm={12} md={3}>
                   <InputNumber
                     placeholder="Min Price"
                     value={filters.minPrice}
@@ -659,7 +697,7 @@ const ManageMenu = () => {
                     min={0}
                   />
                 </Col>
-                <Col span={6}>
+                <Col xs={24} sm={12} md={3}>
                   <InputNumber
                     placeholder="Max Price"
                     value={filters.maxPrice}
@@ -668,7 +706,7 @@ const ManageMenu = () => {
                     min={0}
                   />
                 </Col>
-                <Col span={6}>
+                <Col xs={24} sm={12} md={6}>
                   <Select
                     placeholder="Stock Status"
                     value={filters.inStock ? "inStock" : undefined}
@@ -680,33 +718,17 @@ const ManageMenu = () => {
                   </Select>
                 </Col>
               </Row>
-            </StyledCard> */}
+            </StyledCard>
 
             {/* List of Menu Items */}
-            <StyledCard>
-              <Title level={4} style={{ color: "#2d3748" }}>
-                All Menu Items
-              </Title>
-              <StyledTable
-                columns={columns}
-                dataSource={menu}
-                rowKey="_id"
-                locale={{ emptyText: "No menu items found." }}
-                scroll={{ x: true }}
-                pagination={false}
-                loading={loading}
-              />
-              {/* <div style={{ marginTop: "16px", textAlign: "right" }}>
-                <Pagination
-                  current={pagination.page}
-                  pageSize={pagination.limit}
-                  total={totalItems} // Use totalItems from backend
-                  onChange={handlePaginationChange}
-                  showSizeChanger
-                  pageSizeOptions={["10", "20", "50"]}
-                />
-              </div> */}
-            </StyledCard>
+            <MenuItemsList
+              menu={menu}
+              loading={loading}
+              totalItems={totalItems}
+              pagination={pagination}
+              columns={columns}
+              onPaginationChange={handlePaginationChange}
+            />
 
             {/* Update Menu Item Modal */}
             <Modal
@@ -719,7 +741,6 @@ const ManageMenu = () => {
               }}
               footer={null}
               style={{ top: 20 }}
-              Style={{ padding: "24px", background: "#f9f9f9", borderRadius: "8px" }}
             >
               <Form form={updateForm} layout="vertical" onFinish={handleUpdateMenuItem}>
                 <Row gutter={[16, 16]}>
@@ -862,11 +883,22 @@ const ManageMenu = () => {
               </Form>
             </Modal>
           </Content>
-        </motion.div>
+        </div>
       </div>
     </Fragment>
   );
 };
 
+MenuItemsList.propTypes = {
+  menu: PropTypes.array.isRequired,
+  loading: PropTypes.bool.isRequired,
+  totalItems: PropTypes.number.isRequired,
+  pagination: PropTypes.shape({
+    page: PropTypes.number.isRequired,
+    limit: PropTypes.number.isRequired,
+  }).isRequired,
+  columns: PropTypes.array.isRequired,
+  onPaginationChange: PropTypes.func.isRequired,
+};
 
 export default ManageMenu;

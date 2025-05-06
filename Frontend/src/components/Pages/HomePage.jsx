@@ -1,16 +1,17 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { getMenuItems } from "../Redux/Slices/menuSlice";
 import { addToCart, updateQuantity } from "../Redux/Slices/cartSlice";
-import FloatingSidebar from "../Layout/FloatingSidebar"; // Updated to FloatingSidebar
+import FloatingSidebar from "../Layout/FloatingSidebar";
 import { FaShoppingCart, FaPlus, FaMinus, FaSearch } from "react-icons/fa";
 import { motion } from "framer-motion";
 import Loading from "../Loading/Loading";
-import Slider from "react-slick"; // Import react-slick for carousel
-import "slick-carousel/slick/slick.css"; // Slick carousel styles
-import "slick-carousel/slick/slick-theme.css"; // Slick carousel theme
-import ResFvi from "../../assets/ResFvi.png"; // Import your logo image
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import ResFvi from "../../assets/ResFvi.png";
+
 const HomePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -22,26 +23,42 @@ const HomePage = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedType, setSelectedType] = useState("All");
 
-  useEffect(() => {
-    dispatch(getMenuItems());
-  }, [dispatch]);
-
-  const categories = ["All", "veg", "non-veg", "beverages", "mocktails", "cocktails", "snacks", "desserts"];
+  const categories = [
+    "All",
+    "veg",
+    "non-veg",
+    "beverages",
+    "mocktails",
+    "cocktails",
+    "snacks",
+    "desserts",
+  ];
   const types = ["All", "Indian", "Chinese", "Italian", "Continental"];
 
-  const filteredMenu = menu
-    .filter((item) => {
-      const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === "All" || item.category === selectedCategory.toLowerCase();
-      const matchesType = selectedType === "All" || item.type === selectedType;
-      return matchesSearch && matchesCategory && matchesType;
-    })
-    .reduce((acc, item) => {
-      const category = item.category || "Other";
-      if (!acc[category]) acc[category] = [];
-      acc[category].push(item);
-      return acc;
-    }, {});
+  // Fetch menu items with filters
+  const fetchMenuItems = useCallback(() => {
+    const queryParams = {
+      page: 1,
+      limit: 1000, // Fetch all items in one call
+      search: searchTerm || undefined,
+      category: selectedCategory === "All" ? undefined : selectedCategory.toLowerCase(),
+      type: selectedType === "All" ? undefined : selectedType,
+    };
+
+    dispatch(getMenuItems(queryParams));
+  }, [dispatch, searchTerm, selectedCategory, selectedType]);
+
+  useEffect(() => {
+    fetchMenuItems();
+  }, [fetchMenuItems]);
+
+  // Group menu items by category
+  const filteredMenu = menu.reduce((acc, item) => {
+    const category = item.category || "Other";
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(item);
+    return acc;
+  }, {});
 
   const handleAddToCart = (menuItemId) => {
     dispatch(addToCart({ menu_item: menuItemId, quantity: 1 }));
@@ -68,16 +85,14 @@ const HomePage = () => {
     autoplay: true,
     autoplaySpeed: 3000,
     arrows: false,
-    responsive: [
-      { breakpoint: 640, settings: { slidesToShow: 1 } },
-    ],
+    responsive: [{ breakpoint: 640, settings: { slidesToShow: 1 } }],
   };
 
   // Unsplash food images for carousel
   const carouselImages = [
     "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
-    "https://images.unsplash.com/photo-1567337710282-00832b415979?q=80&w=1930&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    "https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=1971&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1567337710282-00832b415979?q=80&w=1930&auto=format&fit=crop&ixlib=rb-4.0.3",
+    "https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=1971&auto=format&fit=crop&ixlib=rb-4.0.3",
     "https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
   ];
 
@@ -96,6 +111,7 @@ const HomePage = () => {
                     src={image}
                     alt={`Food ${index + 1}`}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent"></div>
                   <motion.div
@@ -152,8 +168,8 @@ const HomePage = () => {
                 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-10 md:mb-12 sm:mb-12 text-gray-800"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }} 
-                style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",marginBottom: "2rem" }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)", marginBottom: "2rem" }}
               >
                 Explore Our <span className="text-amber-600">Menu</span>
               </motion.h2>
@@ -220,6 +236,12 @@ const HomePage = () => {
                   <p className="text-red-500 text-xl font-medium">
                     {error.message || "Failed to load menu items. Please try again."}
                   </p>
+                  <button
+                    onClick={fetchMenuItems}
+                    className="mt-4 bg-amber-500 text-white py-2 px-6 rounded-full hover:bg-amber-600 transition-all duration-300"
+                  >
+                    Retry
+                  </button>
                 </motion.div>
               ) : Object.keys(filteredMenu).length === 0 ? (
                 <motion.p
@@ -228,14 +250,14 @@ const HomePage = () => {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5 }}
                 >
-                  No menu items available.
+                  No menu items found. Try adjusting your filters.
                 </motion.p>
               ) : (
                 Object.keys(filteredMenu).map((category, index) => (
                   <motion.div
                     key={category}
                     className="mb-12 sm:mb-16"
-                    style={{display: 'flex', flexDirection: 'column', gap:"1rem",marginTop:"1rem" }}
+                    style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: index * 0.2 }}
@@ -275,6 +297,7 @@ const HomePage = () => {
                                     "https://images.unsplash.com/photo-1513104890138-7cacd3a56ad8?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80")
                                 }
                                 onClick={() => !isOutOfStock && handleItemClick(item._id)}
+                                loading="lazy"
                               />
                               {isOutOfStock && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/50">
@@ -295,7 +318,9 @@ const HomePage = () => {
                                 ${item.price?.toFixed(2) || "N/A"}
                               </p>
                               {item.isFreshlyMade ? (
-                                <p className="text-xs sm:text-sm text-green-600 font-medium mb-3">Made to Order</p>
+                                <p className="text-xs sm:text-sm text-green-600 font-medium mb-3">
+                                  Made to Order
+                                </p>
                               ) : (
                                 <p
                                   className={`text-xs sm:text-sm font-medium mb-3 ${
