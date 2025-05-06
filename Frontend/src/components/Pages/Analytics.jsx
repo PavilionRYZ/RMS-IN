@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Fragment, useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
@@ -16,6 +17,7 @@ import { FiDownload } from 'react-icons/fi';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   fetchAnalytics,
   generateAnalytics,
@@ -79,13 +81,13 @@ const AnalyticsDashboard = () => {
   }, [dispatch, menu, menuLoading]);
 
   // Debugging: Log inventory data
-  useEffect(() => {
-    if (data?.inventoryAnalysis) {
-      console.log("Frontend Inventory Stock:", JSON.stringify(data.inventoryAnalysis.stock, null, 2));
-      console.log("Frontend Inventory Usage:", JSON.stringify(data.inventoryAnalysis.usage, null, 2));
-      console.log("Frontend Low Stock:", JSON.stringify(data.inventoryAnalysis.lowStock, null, 2));
-    }
-  }, [data]);
+  // useEffect(() => {
+  //   if (data?.inventoryAnalysis) {
+  //     console.log("Frontend Inventory Stock:", JSON.stringify(data.inventoryAnalysis.stock, null, 2));
+  //     console.log("Frontend Inventory Usage:", JSON.stringify(data.inventoryAnalysis.usage, null, 2));
+  //     console.log("Frontend Low Stock:", JSON.stringify(data.inventoryAnalysis.lowStock, null, 2));
+  //   }
+  // }, [data]);
 
   const handleGenerateReport = () => {
     if (startDate && endDate) {
@@ -103,160 +105,393 @@ const AnalyticsDashboard = () => {
 
   const exportToExcel = () => {
     if (data) {
-      const worksheetData = [
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const workbook = XLSX.utils.book_new();
+
+      // Summary Sheet
+      const summaryData = [
+        ['Analytics Report'],
+        ['Company Name:', 'RestoMaster'],
+        ['Report Period:', period.charAt(0).toUpperCase() + period.slice(1)],
+        ['Date Range:', `${startDate || 'N/A'} to ${endDate || 'N/A'}`],
+        ['Generated On:', new Date().toLocaleString()],
+        [''],
+        ['Key Metrics'],
         ['Metric', 'Value'],
-        ['Total Sales', data.totalSales || 0],
-        ['Total Profit', data.totalProfit || 0],
-        ['Total Loss', data.totalLoss || 0],
-        ['Order Types', ''],
-        ['Dine-in', data.orderTypes?.dineIn?.amount || 0],
-        ['Takeaway', data.orderTypes?.takeaway?.amount || 0],
-        ['Online', data.orderTypes?.online?.amount || 0],
-        ['Payment Methods', ''],
-        ['Cash', data.paymentMethods?.cash?.amount || 0],
-        ['Card', data.paymentMethods?.card?.amount || 0],
-        ['Online', data.paymentMethods?.online?.amount || 0],
-        ['Order Status', ''],
+        ['Total Sales', `$${Number(data.totalSales || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+        ['Total Profit', `$${Number(data.totalProfit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+        ['Total Loss', `$${Number(data.totalLoss || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+        [''],
+        ['Order Types'],
+        ['Type', 'Amount'],
+        ['Dine-in', `$${Number(data.orderTypes?.dineIn?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+        ['Takeaway', `$${Number(data.orderTypes?.takeaway?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+        ['Online', `$${Number(data.orderTypes?.online?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+        [''],
+        ['Payment Methods'],
+        ['Method', 'Amount'],
+        ['Cash', `$${Number(data.paymentMethods?.cash?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+        ['Card', `$${Number(data.paymentMethods?.card?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+        ['Online', `$${Number(data.paymentMethods?.online?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+        [''],
+        ['Order Status'],
+        ['Status', 'Count'],
         ['Confirmed', data.orderStatus?.confirmed || 0],
         ['Cancelled', data.orderStatus?.cancelled || 0],
-        ['Inventory', ''],
-        ['Added Count', data.inventory?.added?.count || 0],
-        ['Added Value', data.inventory?.added?.value || 0],
-        ['Used Count', data.inventory?.used?.count || 0],
-        ['Used Value', data.inventory?.used?.value || 0],
-        ['Inventory Analysis - Stock', ''],
-        ...(data.inventoryAnalysis?.stock?.map((item, index) => [
-          `${index + 1}. ${item.item?.name || 'Unknown Item'} (Stock)`,
+        [''],
+        ['Inventory Summary'],
+        ['Metric', 'Count', 'Value'],
+        ['Added', data.inventory?.added?.count || 0, `$${Number(data.inventory?.added?.value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+        ['Used', data.inventory?.used?.count || 0, `$${Number(data.inventory?.used?.value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+      ];
+
+      const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+      // Apply formatting
+      summarySheet['!cols'] = [
+        { wch: 20 }, // Metric
+        { wch: 15 }, // Value
+        { wch: 15 }, // Extra column for Inventory Summary
+      ];
+      XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
+
+      // Inventory Analysis Sheet
+      const inventoryData = [
+        ['Inventory Analysis'],
+        [''],
+        ['Current Stock'],
+        ['Item Name', 'Current Stock', 'Unit Cost', 'Total Value'],
+        ...(data.inventoryAnalysis?.stock?.map((item) => [
+          item.item?.name || 'Unknown Item',
           item.currentStock || 0,
-          item.unitCost || 0,
-          item.totalValue || 0,
+          `$${Number(item.unitCost || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `$${Number(item.totalValue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         ]) || []),
-        ['Inventory Analysis - Usage', ''],
-        ...(data.inventoryAnalysis?.usage?.map((item, index) => [
-          `${index + 1}. ${item.item?.name || 'Unknown Item'} (Used)`,
+        [''],
+        ['Usage'],
+        ['Item Name', 'Used Quantity', 'Total Cost'],
+        ...(data.inventoryAnalysis?.usage?.map((item) => [
+          item.item?.name || 'Unknown Item',
           item.usedQuantity || 0,
-          item.totalCost || 0,
+          `$${Number(item.totalCost || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         ]) || []),
-        ['Low Stock Alerts', ''],
-        ...(data.inventoryAnalysis?.lowStock?.map((item, index) => [
-          `${index + 1}. ${item.name || 'Unknown Item'} (Low Stock)`,
+        [''],
+        ['Low Stock Alerts'],
+        ['Item Name', 'Current Stock', 'Unit Cost'],
+        ...(data.inventoryAnalysis?.lowStock?.map((item) => [
+          item.name || 'Unknown Item',
           item.currentStock || 0,
-          item.unitCost || 0,
+          `$${Number(item.unitCost || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         ]) || []),
-        ['Top Selling Items', ''],
-        ...(data.topSellingItems?.map((item, index) => [
-          `${index + 1}. ${menu.find((m) => m._id === (item.item?._id || item._id))?.name || 'Unknown'}`,
+      ];
+
+      const inventorySheet = XLSX.utils.aoa_to_sheet(inventoryData);
+      inventorySheet['!cols'] = [
+        { wch: 25 }, // Item Name
+        { wch: 15 }, // Current Stock / Used Quantity
+        { wch: 15 }, // Unit Cost / Total Cost
+        { wch: 15 }, // Total Value
+      ];
+      XLSX.utils.book_append_sheet(workbook, inventorySheet, 'Inventory Analysis');
+
+      // Top Selling Items Sheet
+      const topItemsData = [
+        ['Top Selling Items'],
+        ['Item Name', 'Quantity Sold'],
+        ...(data.topSellingItems?.map((item) => [
+          menu.find((m) => m._id === (item.item?._id || item._id))?.name || 'Unknown',
           item.quantity || 0,
         ]) || []),
       ];
 
-      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Analytics');
-      XLSX.writeFile(workbook, `analytics-report-${period}-${new Date().toISOString()}.xlsx`);
+      const topItemsSheet = XLSX.utils.aoa_to_sheet(topItemsData);
+      topItemsSheet['!cols'] = [
+        { wch: 25 }, // Item Name
+        { wch: 15 }, // Quantity Sold
+      ];
+      XLSX.utils.book_append_sheet(workbook, topItemsSheet, 'Top Selling Items');
+
+      XLSX.writeFile(workbook, `analytics-report-${period}-${timestamp}.xlsx`);
     }
   };
 
   const exportToPDF = () => {
     if (data) {
       const doc = new jsPDF();
-      doc.setFontSize(16);
-      doc.text('Analytics Report', 20, 20);
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      const timestamp = new Date().toLocaleString();
+
+      // Fonts and Colors
+      doc.setFont('helvetica', 'normal');
+      const primaryColor = '#1D3557'; // Dark blue for headers
+      const textColor = '#333333'; // Dark gray for body text
+
+      // Header for all pages
+      const addHeader = () => {
+        doc.setFontSize(16);
+        doc.setTextColor(primaryColor);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Analytics Report', margin, 20);
+        doc.setFontSize(10);
+        doc.setTextColor(textColor);
+        doc.setFont('helvetica', 'normal');
+        doc.text('RestoMaster', margin, 28);
+        doc.text(`Generated On: ${timestamp}`, pageWidth - margin - 60, 28, { align: 'right' });
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(primaryColor);
+        doc.line(margin, 32, pageWidth - margin, 32); // Horizontal line
+      };
+
+      // Footer for all pages
+      const addFooter = () => {
+        doc.setFontSize(8);
+        doc.setTextColor('#666666');
+        doc.text(`Page ${doc.internal.getCurrentPageInfo().pageNumber}`, pageWidth - margin - 10, pageHeight - 10, { align: 'right' });
+      };
+
+      // Initialize first page
+      addHeader();
+      addFooter();
+
+      // Report Metadata
       doc.setFontSize(12);
-
-      let y = 30;
-      doc.text(`Period: ${period}`, 20, y);
-      y += 10;
-      doc.text(`Date Range: ${startDate || 'N/A'} to ${endDate || 'N/A'}`, 20, y);
-      y += 10;
-
-      doc.text('Key Metrics:', 20, y);
-      y += 10;
-      doc.text(`Total Sales: $${(data.totalSales || 0).toFixed(2)}`, 20, y);
-      y += 10;
-      doc.text(`Total Profit: $${(data.totalProfit || 0).toFixed(2)}`, 20, y);
-      y += 10;
-      doc.text(`Total Loss: $${(data.totalLoss || 0).toFixed(2)}`, 20, y);
+      doc.setTextColor(textColor);
+      let y = 40;
+      doc.text(`Period: ${period.charAt(0).toUpperCase() + period.slice(1)}`, margin, y);
+      y += 8;
+      doc.text(`Date Range: ${startDate || 'N/A'} to ${endDate || 'N/A'}`, margin, y);
       y += 10;
 
-      doc.text('Order Types:', 20, y);
-      y += 10;
-      doc.text(`Dine-in: $${data.orderTypes?.dineIn?.amount || 0}`, 20, y);
-      y += 10;
-      doc.text(`Takeaway: $${data.orderTypes?.takeaway?.amount || 0}`, 20, y);
-      y += 10;
-      doc.text(`Online: $${data.orderTypes?.online?.amount || 0}`, 20, y);
-      y += 10;
+      // Key Metrics
+      doc.setFontSize(14);
+      doc.setTextColor(primaryColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Key Metrics', margin, y);
+      y += 8;
 
-      doc.text('Payment Methods:', 20, y);
-      y += 10;
-      doc.text(`Cash: $${data.paymentMethods?.cash?.amount || 0}`, 20, y);
-      y += 10;
-      doc.text(`Card: $${data.paymentMethods?.card?.amount || 0}`, 20, y);
-      y += 10;
-      doc.text(`Online: $${data.paymentMethods?.online?.amount || 0}`, 20, y);
-      y += 10;
-
-      doc.text('Order Status:', 20, y);
-      y += 10;
-      doc.text(`Confirmed: ${data.orderStatus?.confirmed || 0}`, 20, y);
-      y += 10;
-      doc.text(`Cancelled: ${data.orderStatus?.cancelled || 0}`, 20, y);
-      y += 10;
-
-      doc.text('Inventory:', 20, y);
-      y += 10;
-      doc.text(`Added Count: ${data.inventory?.added?.count || 0}`, 20, y);
-      y += 10;
-      doc.text(`Added Value: $${data.inventory?.added?.value || 0}`, 20, y);
-      y += 10;
-      doc.text(`Used Count: ${data.inventory?.used?.count || 0}`, 20, y);
-      y += 10;
-      doc.text(`Used Value: $${data.inventory?.used?.value || 0}`, 20, y);
-      y += 10;
-
-      doc.text('Inventory Analysis - Stock:', 20, y);
-      y += 10;
-      data.inventoryAnalysis?.stock?.forEach((item, index) => {
-        doc.text(
-          `${index + 1}. ${item.item?.name || 'Unknown Item'}: ${item.currentStock || 0} ($${item.unitCost || 0}/unit, Total: $${item.totalValue || 0})`,
-          20,
-          y
-        );
-        y += 10;
+      autoTable(doc, {
+        startY: y,
+        head: [['Metric', 'Value']],
+        body: [
+          ['Total Sales', `$${Number(data.totalSales || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+          ['Total Profit', `$${Number(data.totalProfit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+          ['Total Loss', `$${Number(data.totalLoss || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+        ],
+        styles: { fontSize: 10, textColor: textColor },
+        headStyles: { fillColor: primaryColor, textColor: '#FFFFFF', fontStyle: 'bold' },
+        margin: { left: margin, right: margin },
       });
 
-      doc.text('Inventory Analysis - Usage:', 20, y);
-      y += 10;
-      data.inventoryAnalysis?.usage?.forEach((item, index) => {
-        doc.text(
-          `${index + 1}. ${item.item?.name || 'Unknown Item'}: ${item.usedQuantity || 0} (Total Cost: $${item.totalCost || 0})`,
-          20,
-          y
-        );
-        y += 10;
+      y = doc.lastAutoTable.finalY + 10;
+
+      // Order Types
+      doc.setFontSize(14);
+      doc.setTextColor(primaryColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Order Types', margin, y);
+      y += 8;
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Type', 'Amount']],
+        body: [
+          ['Dine-in', `$${Number(data.orderTypes?.dineIn?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+          ['Takeaway', `$${Number(data.orderTypes?.takeaway?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+          ['Online', `$${Number(data.orderTypes?.online?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+        ],
+        styles: { fontSize: 10, textColor: textColor },
+        headStyles: { fillColor: primaryColor, textColor: '#FFFFFF', fontStyle: 'bold' },
+        margin: { left: margin, right: margin },
+        didDrawPage: addFooter,
       });
 
-      doc.text('Low Stock Alerts:', 20, y);
-      y += 10;
-      data.inventoryAnalysis?.lowStock?.forEach((item, index) => {
-        doc.text(
-          `${index + 1}. ${item.name || 'Unknown Item'}: ${item.currentStock || 0} ($${item.unitCost || 0}/unit)`,
-          20,
-          y
-        );
-        y += 10;
+      y = doc.lastAutoTable.finalY + 10;
+
+      // Payment Methods
+      doc.setFontSize(14);
+      doc.setTextColor(primaryColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Payment Methods', margin, y);
+      y += 8;
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Method', 'Amount']],
+        body: [
+          ['Cash', `$${Number(data.paymentMethods?.cash?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+          ['Card', `$${Number(data.paymentMethods?.card?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+          ['Online', `$${Number(data.paymentMethods?.online?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+        ],
+        styles: { fontSize: 10, textColor: textColor },
+        headStyles: { fillColor: primaryColor, textColor: '#FFFFFF', fontStyle: 'bold' },
+        margin: { left: margin, right: margin },
+        didDrawPage: (data) => {
+          addHeader();
+          addFooter();
+        },
       });
 
-      doc.text('Top Selling Items:', 20, y);
-      y += 10;
-      data.topSellingItems?.forEach((item, index) => {
-        const name = menu.find((m) => m._id === (item.item?._id || item._id))?.name || 'Unknown';
-        doc.text(`${index + 1}. ${name}: ${item.quantity || 0}`, 20, y);
-        y += 10;
+      y = doc.lastAutoTable.finalY + 10;
+
+      // Order Status
+      doc.setFontSize(14);
+      doc.setTextColor(primaryColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Order Status', margin, y);
+      y += 8;
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Status', 'Count']],
+        body: [
+          ['Confirmed', data.orderStatus?.confirmed || 0],
+          ['Cancelled', data.orderStatus?.cancelled || 0],
+        ],
+        styles: { fontSize: 10, textColor: textColor },
+        headStyles: { fillColor: primaryColor, textColor: '#FFFFFF', fontStyle: 'bold' },
+        margin: { left: margin, right: margin },
+        didDrawPage: addFooter,
       });
 
-      doc.save(`analytics-report-${period}-${new Date().toISOString()}.pdf`);
+      y = doc.lastAutoTable.finalY + 10;
+
+      // Inventory Summary
+      doc.setFontSize(14);
+      doc.setTextColor(primaryColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Inventory Summary', margin, y);
+      y += 8;
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Metric', 'Count', 'Value']],
+        body: [
+          [
+            'Added',
+            data.inventory?.added?.count || 0,
+            `$${Number(data.inventory?.added?.value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          ],
+          [
+            'Used',
+            data.inventory?.used?.count || 0,
+            `$${Number(data.inventory?.used?.value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          ],
+        ],
+        styles: { fontSize: 10, textColor: textColor },
+        headStyles: { fillColor: primaryColor, textColor: '#FFFFFF', fontStyle: 'bold' },
+        margin: { left: margin, right: margin },
+        didDrawPage: (data) => {
+          addHeader();
+          addFooter();
+        },
+      });
+
+      y = doc.lastAutoTable.finalY + 10;
+
+      // Inventory Analysis - Stock
+      doc.setFontSize(14);
+      doc.setTextColor(primaryColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Inventory Analysis - Current Stock', margin, y);
+      y += 8;
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Item Name', 'Current Stock', 'Unit Cost', 'Total Value']],
+        body: data.inventoryAnalysis?.stock?.map((item) => [
+          item.item?.name || 'Unknown Item',
+          item.currentStock || 0,
+          `$${Number(item.unitCost || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `$${Number(item.totalValue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        ]) || [],
+        styles: { fontSize: 10, textColor: textColor },
+        headStyles: { fillColor: primaryColor, textColor: '#FFFFFF', fontStyle: 'bold' },
+        margin: { left: margin, right: margin },
+        didDrawPage: (data) => {
+          addHeader();
+          addFooter();
+        },
+      });
+
+      y = doc.lastAutoTable.finalY + 10;
+
+      // Inventory Analysis - Usage
+      doc.setFontSize(14);
+      doc.setTextColor(primaryColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Inventory Analysis - Usage', margin, y);
+      y += 8;
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Item Name', 'Used Quantity', 'Total Cost']],
+        body: data.inventoryAnalysis?.usage?.map((item) => [
+          item.item?.name || 'Unknown Item',
+          item.usedQuantity || 0,
+          `$${Number(item.totalCost || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        ]) || [],
+        styles: { fontSize: 10, textColor: textColor },
+        headStyles: { fillColor: primaryColor, textColor: '#FFFFFF', fontStyle: 'bold' },
+        margin: { left: margin, right: margin },
+        didDrawPage: (data) => {
+          addHeader();
+          addFooter();
+        },
+      });
+
+      y = doc.lastAutoTable.finalY + 10;
+
+      // Low Stock Alerts
+      doc.setFontSize(14);
+      doc.setTextColor(primaryColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Low Stock Alerts', margin, y);
+      y += 8;
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Item Name', 'Current Stock', 'Unit Cost']],
+        body: data.inventoryAnalysis?.lowStock?.map((item) => [
+          item.name || 'Unknown Item',
+          item.currentStock || 0,
+          `$${Number(item.unitCost || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        ]) || [],
+        styles: { fontSize: 10, textColor: textColor },
+        headStyles: { fillColor: primaryColor, textColor: '#FFFFFF', fontStyle: 'bold' },
+        margin: { left: margin, right: margin },
+        didDrawPage: (data) => {
+          addHeader();
+          addFooter();
+        },
+      });
+
+      y = doc.lastAutoTable.finalY + 10;
+
+      // Top Selling Items
+      doc.setFontSize(14);
+      doc.setTextColor(primaryColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Top Selling Items', margin, y);
+      y += 8;
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Item Name', 'Quantity Sold']],
+        body: data.topSellingItems?.map((item) => [
+          menu.find((m) => m._id === (item.item?._id || item._id))?.name || 'Unknown',
+          item.quantity || 0,
+        ]) || [],
+        styles: { fontSize: 10, textColor: textColor },
+        headStyles: { fillColor: primaryColor, textColor: '#FFFFFF', fontStyle: 'bold' },
+        margin: { left: margin, right: margin },
+        didDrawPage: (data) => {
+          addHeader();
+          addFooter();
+        },
+      });
+
+      doc.save(`analytics-report-${period}-${timestamp.replace(/[:.]/g, '-')}.pdf`);
     }
   };
 
@@ -487,7 +722,7 @@ const AnalyticsDashboard = () => {
                   className="bg-gray-100 p-4 rounded-lg"
                 >
                   <h3 className="font-semibold">Total Sales</h3>
-                  <p className="text-2xl">${(data.totalSales || 0).toFixed(2)}</p>
+                  <p className="text-2xl">${Number(data.totalSales || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </motion.div>
                 <motion.div
                   initial={{ scale: 0.9 }}
@@ -495,7 +730,7 @@ const AnalyticsDashboard = () => {
                   className="bg-gray-100 p-4 rounded-lg"
                 >
                   <h3 className="font-semibold">Total Profit</h3>
-                  <p className="text-2xl">${(data.totalProfit || 0).toFixed(2)}</p>
+                  <p className="text-2xl">${Number(data.totalProfit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </motion.div>
                 <motion.div
                   initial={{ scale: 0.9 }}
@@ -503,7 +738,7 @@ const AnalyticsDashboard = () => {
                   className="bg-gray-100 p-4 rounded-lg"
                 >
                   <h3 className="font-semibold">Total Loss</h3>
-                  <p className="text-2xl">${(data.totalLoss || 0).toFixed(2)}</p>
+                  <p className="text-2xl">${Number(data.totalLoss || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </motion.div>
               </div>
             )}
@@ -520,7 +755,7 @@ const AnalyticsDashboard = () => {
                   {data.inventoryAnalysis.lowStock.map((item, index) => (
                     <li key={index} className="text-red-600">
                       {item.name || 'Unknown Item'}: {item.currentStock} units remaining ($
-                      {item.unitCost || 0}/unit)
+                      {Number(item.unitCost || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/unit)
                     </li>
                   ))}
                 </ul>
