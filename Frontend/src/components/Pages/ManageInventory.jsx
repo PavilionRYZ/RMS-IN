@@ -35,7 +35,7 @@ import { FaBoxOpen } from "react-icons/fa";
 import { motion } from "framer-motion";
 import styled from "styled-components";
 import moment from "moment";
-import { PlusCircleOutlined } from "@ant-design/icons"; 
+import { PlusCircleOutlined } from "@ant-design/icons";
 
 const { Content } = Layout;
 const { Title } = Typography;
@@ -56,14 +56,14 @@ const StyledCard = styled(Card)`
 
 const StyledTable = styled(Table)`
   .ant-table-thead > tr > th {
-    background: #52c41a;
-    color: white;
+    background: ${(props) => (props.headerClicked ? "#ffffff" : "#52c41a")};
+    color: ${(props) => (props.headerClicked ? "#ffffff" : "#000000")};
     font-weight: 600;
     border-bottom: 2px solid #e8ecef;
+    transition: background 0.3s ease, color 0.3s ease;
   }
   .ant-table-row {
     transition: background 0.2s ease;
-   
   }
 `;
 
@@ -93,6 +93,7 @@ const ManageInventory = () => {
   const [sortOrder, setSortOrder] = useState("new");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [headerClicked, setHeaderClicked] = useState(false); // State for header color
 
   const units = ["kg", "gram", "litre", "millilitre", "piece", "pack"];
 
@@ -134,6 +135,7 @@ const ManageInventory = () => {
       });
     }
   };
+
   const handleAddStock = async (values) => {
     try {
       await dispatch(addStock(values)).unwrap();
@@ -206,6 +208,11 @@ const ManageInventory = () => {
         placement: "topRight",
       });
     }
+  };
+
+  // Handle table header click for color change
+  const handleHeaderClick = () => {
+    setHeaderClicked(true);
   };
 
   const columns = [
@@ -320,10 +327,10 @@ const ManageInventory = () => {
   return (
     <Fragment>
       <div className="min-h-screen flex bg-gradient-to-b from-gray-50 to-gray-100">
-        <FloatingSidebar/>
+        <FloatingSidebar />
         <motion.div
-          className={`content w-full p-6 sm:p-8 transition-all duration-300`}
-          style={{display: 'flex', flexDirection: 'column', gap:"1rem"}}
+          className="content w-full p-6 sm:p-8 transition-all duration-300"
+          style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
@@ -352,11 +359,7 @@ const ManageInventory = () => {
                 <Title level={4} style={{ color: "#2d3748", marginBottom: "24px" }}>
                   Create New Inventory Item
                 </Title>
-                <Form
-                  form={createForm}
-                  layout="vertical"
-                  onFinish={handleCreateInventoryItem}
-                >
+                <Form form={createForm} layout="vertical" onFinish={handleCreateInventoryItem}>
                   <Row gutter={[16, 16]}>
                     <Col xs={24} sm={12}>
                       <Form.Item
@@ -408,6 +411,7 @@ const ManageInventory = () => {
                 </Form>
               </StyledCard>
             </motion.div>
+
             {/* Add New Stock Form */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -429,12 +433,24 @@ const ManageInventory = () => {
                       <Form.Item
                         label="Item Name"
                         name="item_name"
-                        rules={[{ required: true, message: "Please enter the item name" }]}
+                        rules={[{ required: true, message: "Please select an item" }]}
                       >
-                        <Input
-                          placeholder="Enter item name"
-                          className="rounded-lg p-3 border-gray-200 focus:ring-2 focus:ring-green-400"
-                        />
+                        <Select
+                          placeholder="Select item"
+                          className="rounded-lg"
+                          dropdownStyle={{ borderRadius: "8px" }}
+                          showSearch
+                          optionFilterProp="children"
+                          filterOption={(input, option) =>
+                            option.children.toLowerCase().includes(input.toLowerCase())
+                          }
+                        >
+                          {inventory.inventoryItems.map((item) => (
+                            <Option key={item._id} value={item.item_name}>
+                              {item.item_name}
+                            </Option>
+                          ))}
+                        </Select>
                       </Form.Item>
                     </Col>
                     <Col xs={24} sm={12}>
@@ -484,6 +500,15 @@ const ManageInventory = () => {
                       </Form.Item>
                     </Col>
                     <Col xs={24}>
+                      <Form.Item label="Notes" name="notes">
+                        <Input.TextArea
+                          placeholder="Optional notes"
+                          rows={3}
+                          className="rounded-lg border-gray-200 focus:ring-2 focus:ring-green-400"
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24}>
                       <Form.Item>
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                           <StyledButton
@@ -506,6 +531,7 @@ const ManageInventory = () => {
             {/* Filters and Sorting */}
             <motion.div
               className="flex flex-col sm:flex-row gap-4 mb-8"
+              style={{ marginBottom: "2rem" }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
@@ -553,6 +579,8 @@ const ManageInventory = () => {
                     total: inventory.totalItems || 0,
                     onChange: (page) => setCurrentPage(page),
                   }}
+                  headerClicked={headerClicked}
+                  onHeaderCell={() => ({ onClick: handleHeaderClick })}
                 />
               </StyledCard>
             </motion.div>
@@ -667,7 +695,7 @@ const ManageInventory = () => {
                       htmlType="submit"
                       icon={<MinusOutlined />}
                       loading={loading}
-                      style={{ background: "#1890ff", borderColor: "#1890ff", marginRight: "8px" ,marginBottom:"8px"}}
+                      style={{ background: "#1890ff", borderColor: "#1890ff", marginRight: "8px", marginBottom: "8px" }}
                     >
                       Use Stock
                     </StyledButton>

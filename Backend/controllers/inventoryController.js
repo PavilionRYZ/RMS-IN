@@ -1,7 +1,6 @@
 const InventoryItem = require("../models/inventory");
 const errorHandler = require("../utils/errorHandler");
 
-
 // Create new inventory item (without initial stock)
 exports.createInventoryItem = async (req, res, next) => {
   try {
@@ -37,7 +36,7 @@ exports.createInventoryItem = async (req, res, next) => {
   }
 };
 
-// Add new stock to inventory
+// Add new stock to inventory (Updated: Prevent creating new items)
 exports.addStock = async (req, res, next) => {
   try {
     const { item_name, quantity, unit, unit_price, notes } = req.body;
@@ -52,6 +51,15 @@ exports.addStock = async (req, res, next) => {
 
     let inventoryItem = await InventoryItem.findOne({ item_name });
 
+    if (!inventoryItem) {
+      return next(new errorHandler(404, "Inventory item not found. Please create the item first."));
+    }
+
+    // Ensure the unit matches the existing item's unit
+    if (inventoryItem.unit !== unit) {
+      return next(new errorHandler(400, "Unit does not match the existing item's unit"));
+    }
+
     const transaction = {
       type: "addition",
       quantity,
@@ -60,26 +68,14 @@ exports.addStock = async (req, res, next) => {
       notes
     };
 
-    if (!inventoryItem) {
-      // Create new item if it doesn't exist
-      inventoryItem = new InventoryItem({
-        item_name,
-        current_quantity: quantity,
-        unit,
-        average_unit_price: unit_price,
-        total_value: quantity * unit_price,
-        transactions: [transaction]
-      });
-    } else {
-      // Update existing item
-      const newTotalQuantity = inventoryItem.current_quantity + quantity;
-      const newTotalValue = inventoryItem.total_value + (quantity * unit_price);
-      inventoryItem.current_quantity = newTotalQuantity;
-      inventoryItem.total_value = newTotalValue;
-      inventoryItem.average_unit_price = newTotalValue / newTotalQuantity;
-      inventoryItem.transactions.push(transaction);
-      inventoryItem.last_updated = Date.now();
-    }
+    // Update existing item
+    const newTotalQuantity = inventoryItem.current_quantity + quantity;
+    const newTotalValue = inventoryItem.total_value + (quantity * unit_price);
+    inventoryItem.current_quantity = newTotalQuantity;
+    inventoryItem.total_value = newTotalValue;
+    inventoryItem.average_unit_price = newTotalValue / newTotalQuantity;
+    inventoryItem.transactions.push(transaction);
+    inventoryItem.last_updated = Date.now();
 
     await inventoryItem.save();
 
@@ -89,7 +85,6 @@ exports.addStock = async (req, res, next) => {
       inventoryItem
     });
   } catch (error) {
-    // console.error("Error adding stock:", error);
     next(new errorHandler(500, "Failed to add stock"));
   }
 };
@@ -139,7 +134,6 @@ exports.useStock = async (req, res, next) => {
       inventoryItem
     });
   } catch (error) {
-    // console.error("Error using stock:", error);
     next(new errorHandler(500, "Failed to use stock"));
   }
 };
@@ -160,12 +154,11 @@ exports.getInventoryItemDetails = async (req, res, next) => {
       transactionHistory: inventoryItem.transactions
     });
   } catch (error) {
-    // console.error("Error fetching inventory details:", error);
     next(new errorHandler(500, "Failed to fetch inventory details"));
   }
 };
 
-// Get all inventory items (updated from original)
+// Get all inventory items
 exports.getAllInventoryItems = async (req, res, next) => {
   try {
     let { search, startDate, endDate, sortBy, sortOrder, page, limit } = req.query;
@@ -197,7 +190,7 @@ exports.getAllInventoryItems = async (req, res, next) => {
       .sort(sortCriteria)
       .skip(skip)
       .limit(limit)
-      .select('-transactions'); // Exclude transactions for list view
+      .select('-transactions');
 
     const totalItems = await InventoryItem.countDocuments(filters);
 
@@ -209,12 +202,11 @@ exports.getAllInventoryItems = async (req, res, next) => {
       inventoryItems
     });
   } catch (error) {
-    // console.error("Error fetching inventory items:", error);
     next(new errorHandler(500, "Failed to fetch inventory items"));
   }
 };
 
-// Delete inventory item (unchanged from original)
+// Delete inventory item
 exports.deleteInventoryItem = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -224,7 +216,6 @@ exports.deleteInventoryItem = async (req, res, next) => {
     }
     res.status(200).json({ success: true, message: "Inventory item deleted successfully" });
   } catch (error) {
-    // console.error("Error deleting inventory item:", error);
     next(new errorHandler(500, "Failed to delete inventory item"));
   }
 };
