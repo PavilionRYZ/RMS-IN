@@ -13,14 +13,34 @@ connectDB();
 // Initialize Express app
 const app = express();
 app.use(cookieParser());
-app.use(cors(
-    {
-        origin: process.env.FRONTEND_URL,
-        credentials: true,
-    }
-));
+app.use(cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+}));
 app.use(express.json());
 
+// In-memory maintenance status (use a database in production)
+let isInMaintenanceMode = false;
+
+// Maintenance status endpoint
+app.get('/api/v1/maintenance-status', (req, res) => {
+    res.json({ maintenanceMode: isInMaintenanceMode });
+});
+
+// Endpoint to toggle maintenance mode (for deployment scripts)
+app.post('/api/v1/set-maintenance', (req, res) => {
+    const authToken = req.headers['x-webhook-secret'];
+    if (authToken !== process.env.WEBHOOK_SECRET) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+    const { status } = req.body;
+    if (typeof status === 'boolean') {
+        isInMaintenanceMode = status;
+        res.json({ success: true, maintenanceMode: isInMaintenanceMode });
+    } else {
+        res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+});
 
 //<------- uncaught ref err ------->
 
@@ -41,7 +61,6 @@ const paymentRoute = require('./routes/paymentRoute');
 const staffManagementRoute = require('./routes/staffManagementRoute');
 const reservationRoute = require('./routes/reservationRoute');
 
-
 // Middleware to parse JSON requests
 app.use(express.json());
 
@@ -54,8 +73,7 @@ app.use("/api/v1", paymentRoute);
 app.use("/api/v1", staffManagementRoute);
 app.use("/api/v1", reservationRoute);
 
-
-//Global Error handling middleware
+// Global Error handling middleware
 app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
     const message = err.message || "Internal Server Error";
@@ -67,16 +85,13 @@ app.use((err, req, res, next) => {
     });
 });
 
-
 // Start the server
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-
 // Unhandled promise rejection
-
 process.on("unhandledRejection", (err) => {
     console.log("Server is closing due to unhandledRejection");
     console.log(`Error: ${err.message}`);
@@ -84,5 +99,4 @@ process.on("unhandledRejection", (err) => {
     server.close(() => {
         process.exit(1);
     });
-
-})
+});
