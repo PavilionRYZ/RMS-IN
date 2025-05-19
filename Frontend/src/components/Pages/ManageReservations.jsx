@@ -76,8 +76,17 @@ const StyledButton = styled(Button)`
 const ManageReservations = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // Safely handle undefined reservations with a default empty array
-  const { reservations = [], loading, error } = useSelector((state) => state.reservation || { reservations: [] });
+  const {
+    reservations = [],
+    total = 0,
+    page = 1,
+    limit = 10,
+    loading,
+    error,
+  } = useSelector(
+    (state) =>
+      state.reservation || { reservations: [], total: 0, page: 1, limit: 10 }
+  );
   const { user: authUser } = useSelector((state) => state.auth);
 
   const [reservationForm] = Form.useForm();
@@ -92,12 +101,15 @@ const ManageReservations = () => {
   const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
-    if (authUser?.role !== "admin" && authUser?.permissions !== "manage_reservations") {
+    if (
+      authUser?.role !== "admin" &&
+      authUser?.permissions !== "manage_reservations"
+    ) {
       navigate("/not-authorized");
       return;
     }
 
-    const params = {};
+    const params = { page: currentPage, limit: pageSize };
     if (searchCustomerName) params.customerName = searchCustomerName;
     if (searchStatus) params.status = searchStatus;
     if (searchDate) params.date = searchDate.format("YYYY-MM-DD");
@@ -107,7 +119,16 @@ const ManageReservations = () => {
     } else if (searchCustomerName) {
       dispatch(getReservationsByCustomerName(params));
     }
-  }, [dispatch, authUser, navigate, searchCustomerName, searchStatus, searchDate]);
+  }, [
+    dispatch,
+    authUser,
+    navigate,
+    searchCustomerName,
+    searchStatus,
+    searchDate,
+    currentPage,
+    pageSize,
+  ]);
 
   const handleCreateReservation = async (values) => {
     try {
@@ -130,7 +151,12 @@ const ManageReservations = () => {
 
   const handleUpdateReservation = async (values) => {
     try {
-      await dispatch(updateReservation({ reservationId: selectedReservation._id, updateData: values })).unwrap();
+      await dispatch(
+        updateReservation({
+          reservationId: selectedReservation._id,
+          updateData: values,
+        })
+      ).unwrap();
       notification.success({
         message: "Success",
         description: "Reservation updated successfully!",
@@ -168,17 +194,17 @@ const ManageReservations = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "pending":
-        return "#faad14"; // Orange
+        return "#faad14";
       case "confirmed":
-        return "#52c41a"; // Green
+        return "#52c41a";
       case "seated":
-        return "#1890ff"; // Blue
+        return "#1890ff";
       case "completed":
-        return "#13c2c2"; // Cyan
+        return "#13c2c2";
       case "canceled":
-        return "#ff4d4f"; // Red
+        return "#ff4d4f";
       default:
-        return "#000000"; // Black (fallback)
+        return "#000000";
     }
   };
 
@@ -202,7 +228,11 @@ const ManageReservations = () => {
         </span>
       ),
     },
-    { title: "Special Requests", dataIndex: "specialRequests", key: "specialRequests" },
+    {
+      title: "Special Requests",
+      dataIndex: "specialRequests",
+      key: "specialRequests",
+    },
     {
       title: "Created By",
       dataIndex: ["createdBy", "name"],
@@ -249,7 +279,6 @@ const ManageReservations = () => {
     },
   ];
 
-  // Fix loading check to handle undefined reservations
   if (loading && (!reservations || reservations.length === 0)) {
     return <Loading />;
   }
@@ -259,14 +288,26 @@ const ManageReservations = () => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+        }}
       >
         <StyledCard>
-          <p style={{ color: "#ff4d4f", fontSize: "18px", marginBottom: "16px" }}>{error}</p>
+          <p
+            style={{ color: "#ff4d4f", fontSize: "18px", marginBottom: "16px" }}
+          >
+            {error}
+          </p>
           <StyledButton type="primary" onClick={() => window.location.reload()}>
             Retry
           </StyledButton>
-          <StyledButton style={{ marginLeft: "16px" }} onClick={() => navigate("/dashboard")}>
+          <StyledButton
+            style={{ marginLeft: "16px" }}
+            onClick={() => navigate("/dashboard")}
+          >
             Back to Dashboard
           </StyledButton>
         </StyledCard>
@@ -303,14 +344,21 @@ const ManageReservations = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
             >
               <StyledCard>
-                <Row justify="space-between" align="middle" style={{ marginBottom: "16px" }}>
+                <Row
+                  justify="space-between"
+                  align="middle"
+                  style={{ marginBottom: "16px" }}
+                >
                   <Col>
                     <Title level={4} style={{ color: "#2d3748", margin: 0 }}>
                       Reservations
                     </Title>
                   </Col>
                   <Col>
-                    <StyledButton type="primary" onClick={() => setCreateModalVisible(true)}>
+                    <StyledButton
+                      type="primary"
+                      onClick={() => setCreateModalVisible(true)}
+                    >
                       Create Reservation
                     </StyledButton>
                   </Col>
@@ -320,7 +368,10 @@ const ManageReservations = () => {
                     <Input
                       placeholder="Search by customer name"
                       value={searchCustomerName}
-                      onChange={(e) => setSearchCustomerName(e.target.value)}
+                      onChange={(e) => {
+                        setSearchCustomerName(e.target.value);
+                        setCurrentPage(1); // Reset to first page on search
+                      }}
                       allowClear
                     />
                   </Col>
@@ -330,7 +381,10 @@ const ManageReservations = () => {
                         <Select
                           placeholder="Filter by status"
                           value={searchStatus}
-                          onChange={(value) => setSearchStatus(value)}
+                          onChange={(value) => {
+                            setSearchStatus(value);
+                            setCurrentPage(1); // Reset to first page on filter
+                          }}
                           allowClear
                           style={{ width: "100%" }}
                         >
@@ -345,7 +399,10 @@ const ManageReservations = () => {
                         <DatePicker
                           placeholder="Filter by date"
                           value={searchDate}
-                          onChange={(date) => setSearchDate(date)}
+                          onChange={(date) => {
+                            setSearchDate(date);
+                            setCurrentPage(1); // Reset to first page on filter
+                          }}
                           format="YYYY-MM-DD"
                           style={{ width: "100%" }}
                         />
@@ -360,13 +417,14 @@ const ManageReservations = () => {
                   pagination={{
                     current: currentPage,
                     pageSize: pageSize,
-                    total: reservations.length, // Safe now due to default value
+                    total: total,
                     onChange: (page, pageSize) => {
                       setCurrentPage(page);
                       setPageSize(pageSize);
                     },
                     showSizeChanger: true,
                     pageSizeOptions: ["10", "20", "50"],
+                    showTotal: (total) => `Total ${total} reservations`,
                   }}
                 />
               </StyledCard>
@@ -387,36 +445,62 @@ const ManageReservations = () => {
                 <Form.Item
                   label="Customer Name"
                   name="customerName"
-                  rules={[{ required: true, message: "Please enter the customer name" }]}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter the customer name",
+                    },
+                  ]}
                 >
                   <Input placeholder="Enter customer name" />
                 </Form.Item>
                 <Form.Item
                   label="Table Number"
                   name="tableNumber"
-                  rules={[{ required: true, message: "Please enter a table number" }]}
+                  rules={[
+                    { required: true, message: "Please enter a table number" },
+                  ]}
                 >
-                  <InputNumber min={1} placeholder="Table number" style={{ width: "100%" }} />
+                  <InputNumber
+                    min={1}
+                    placeholder="Table number"
+                    style={{ width: "100%" }}
+                  />
                 </Form.Item>
                 <Form.Item
                   label="Reservation Date & Time"
                   name="reservationDate"
-                  rules={[{ required: true, message: "Please select a date and time" }]}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please select a date and time",
+                    },
+                  ]}
                 >
                   <DatePicker showTime format="YYYY-MM-DD HH:mm" />
                 </Form.Item>
                 <Form.Item
                   label="Party Size"
                   name="partySize"
-                  rules={[{ required: true, message: "Please enter the party size" }]}
+                  rules={[
+                    { required: true, message: "Please enter the party size" },
+                  ]}
                 >
-                  <InputNumber min={1} placeholder="Party size" style={{ width: "100%" }} />
+                  <InputNumber
+                    min={1}
+                    placeholder="Party size"
+                    style={{ width: "100%" }}
+                  />
                 </Form.Item>
                 <Form.Item label="Special Requests" name="specialRequests">
                   <Input.TextArea rows={3} placeholder="Any special requests" />
                 </Form.Item>
                 <Form.Item>
-                  <StyledButton type="primary" htmlType="submit" loading={loading}>
+                  <StyledButton
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                  >
                     Create Reservation
                   </StyledButton>
                 </Form.Item>
@@ -441,35 +525,59 @@ const ManageReservations = () => {
                 <Form.Item
                   label="Customer Name"
                   name="customerName"
-                  rules={[{ required: true, message: "Please enter the customer name" }]}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter the customer name",
+                    },
+                  ]}
                 >
                   <Input placeholder="Enter customer name" />
                 </Form.Item>
                 <Form.Item
                   label="Table Number"
                   name="tableNumber"
-                  rules={[{ required: true, message: "Please enter a table number" }]}
+                  rules={[
+                    { required: true, message: "Please enter a table number" },
+                  ]}
                 >
-                  <InputNumber min={1} placeholder="Table number" style={{ width: "100%" }} />
+                  <InputNumber
+                    min={1}
+                    placeholder="Table number"
+                    style={{ width: "100%" }}
+                  />
                 </Form.Item>
                 <Form.Item
                   label="Reservation Date & Time"
                   name="reservationDate"
-                  rules={[{ required: true, message: "Please select a date and time" }]}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please select a date and time",
+                    },
+                  ]}
                 >
                   <DatePicker showTime format="YYYY-MM-DD HH:mm" />
                 </Form.Item>
                 <Form.Item
                   label="Party Size"
                   name="partySize"
-                  rules={[{ required: true, message: "Please enter the party size" }]}
+                  rules={[
+                    { required: true, message: "Please enter the party size" },
+                  ]}
                 >
-                  <InputNumber min={1} placeholder="Party size" style={{ width: "100%" }} />
+                  <InputNumber
+                    min={1}
+                    placeholder="Party size"
+                    style={{ width: "100%" }}
+                  />
                 </Form.Item>
                 <Form.Item
                   label="Status"
                   name="status"
-                  rules={[{ required: true, message: "Please select a status" }]}
+                  rules={[
+                    { required: true, message: "Please select a status" },
+                  ]}
                 >
                   <Select placeholder="Select status">
                     <Option value="pending">Pending</Option>
@@ -483,7 +591,11 @@ const ManageReservations = () => {
                   <Input.TextArea rows={3} placeholder="Any special requests" />
                 </Form.Item>
                 <Form.Item>
-                  <StyledButton type="primary" htmlType="submit" loading={loading}>
+                  <StyledButton
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                  >
                     Update Reservation
                   </StyledButton>
                 </Form.Item>

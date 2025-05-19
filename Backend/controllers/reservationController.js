@@ -1,5 +1,6 @@
 const Reservation = require("../models/reservation");
 const errorHandler = require("../utils/errorHandler");
+const mongoose = require("mongoose");
 
 // Create a Reservation
 exports.createReservation = async (req, res, next) => {
@@ -29,7 +30,7 @@ exports.createReservation = async (req, res, next) => {
       reservationDate: new Date(reservationDate),
       partySize,
       specialRequests,
-      createdBy: req.user._id, // Authenticated staff user
+      createdBy: req.user._id,
     });
 
     await reservation.save();
@@ -51,7 +52,7 @@ exports.createReservation = async (req, res, next) => {
 // Update a Reservation (Admin or creator only)
 exports.updateReservation = async (req, res, next) => {
   try {
-    const { reservationId } = req.params; // Changed from id to reservationId
+    const { reservationId } = req.params;
     const { customerName, tableNumber, reservationDate, partySize, status, specialRequests } = req.body;
 
     const reservation = await Reservation.findById(reservationId);
@@ -102,10 +103,11 @@ exports.updateReservation = async (req, res, next) => {
     next(new errorHandler(500, "Failed to update reservation"));
   }
 };
+
 // Cancel a Reservation (Admin or creator only)
 exports.cancelReservation = async (req, res, next) => {
   try {
-    const { reservationId } = req.params; // Changed from id to reservationId
+    const { reservationId } = req.params;
 
     const reservation = await Reservation.findById(reservationId);
     if (!reservation) {
@@ -138,9 +140,8 @@ exports.cancelReservation = async (req, res, next) => {
 // Get a Single Reservation by ID
 exports.getReservationById = async (req, res, next) => {
   try {
-    const { reservationId } = req.params; // Changed from id to reservationId
+    const { reservationId } = req.params;
 
-    // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(reservationId)) {
       return next(new errorHandler(400, "Invalid reservation ID"));
     }
@@ -167,10 +168,14 @@ exports.getReservationById = async (req, res, next) => {
   }
 };
 
-// Get All Reservations
+// Get All Reservations with Pagination
 exports.getAllReservations = async (req, res, next) => {
   try {
-    let { date, status, customerName } = req.query;
+    let { date, status, customerName, page = 1, limit = 10 } = req.query;
+
+    // Parse page and limit as numbers
+    page = parseInt(page, 10) || 1;
+    limit = parseInt(limit, 10) || 10;
 
     const query = {};
     if (date) {
@@ -185,14 +190,26 @@ exports.getAllReservations = async (req, res, next) => {
     if (status) query.status = status;
     if (customerName) query.customerName = { $regex: customerName, $options: "i" };
 
-    const reservations = await Reservation.find(query)
-      .populate("createdBy", "name role")
-      .populate("updatedBy", "name role")
-      .sort({ reservationDate: 1 });
+    // Calculate skip for pagination
+    const skip = (page - 1) * limit;
+
+    // Fetch paginated reservations and total count
+    const [reservations, total] = await Promise.all([
+      Reservation.find(query)
+        .populate("createdBy", "name role")
+        .populate("updatedBy", "name role")
+        .sort({ reservationDate: 1 })
+        .skip(skip)
+        .limit(limit),
+      Reservation.countDocuments(query),
+    ]);
 
     res.status(200).json({
       success: true,
-      count: reservations.length,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
       reservations,
     });
   } catch (error) {
@@ -200,26 +217,43 @@ exports.getAllReservations = async (req, res, next) => {
     next(new errorHandler(500, "Failed to fetch reservations"));
   }
 };
-// Get Reservations by Customer Name (Admin or staff view)=
+
+// Get Reservations by Customer Name with Pagination
 exports.getReservationsByCustomerName = async (req, res, next) => {
   try {
-    const { customerName, status } = req.query;
+    const { customerName, status, page = 1, limit = 10 } = req.query;
 
     if (!customerName) {
       return next(new errorHandler(400, "Customer name is required"));
     }
 
+    // Parse page and limit as numbers
+    page = parseInt(page, 10) || 1;
+    limit = parseInt(limit, 10) || 10;
+
     const query = { customerName: { $regex: customerName, $options: "i" } };
     if (status) query.status = status;
 
-    const reservations = await Reservation.find(query)
-      .populate("createdBy", "name role")
-      .populate("updatedBy", "name role")
-      .sort({ reservationDate: -1 });
+    // Calculate skip for pagination
+    const skip = (page - 1) * limit;
+
+    // Fetch paginated reservations and total count
+    const [reservations, total] = await Promise.all([
+      Reservation.find(query)
+        .populate("createdBy", "name role")
+        .populate("updatedBy", "name role")
+        .sort({ reservationDate: -1 })
+        .skip(skip)
+        .limit(limit),
+      Reservation.countDocuments(query),
+    ]);
 
     res.status(200).json({
       success: true,
-      count: reservations.length,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
       reservations,
     });
   } catch (error) {
