@@ -125,7 +125,20 @@ const ManageOrders = () => {
   ];
 
   const handleStatusChange = (orderId, status) => {
-    dispatch(updateOrderStatus({ orderId, status }));
+    dispatch(updateOrderStatus({ orderId, status })).then((action) => {
+      console.log("Update Order Status Action:", action); // Debug log
+      if (updateOrderStatus.fulfilled.match(action)) {
+        toast.success(`Order ${orderId.slice(-6)} status updated to ${status}`, {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      } else if (updateOrderStatus.rejected.match(action)) {
+        toast.error(`Failed to update order status: ${action.payload?.message || "Unknown error"}`, {
+          position: "top-right",
+          autoClose: 5000,
+        });
+      }
+    });
   };
 
   const handleFilterChange = (key, value) => {
@@ -202,15 +215,14 @@ const ManageOrders = () => {
           <p className="text-gray-600 text-lg">
             <span className="font-semibold">Order Status:</span>{" "}
             <span
-              className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                record.status === "completed"
-                  ? "bg-green-100 text-green-800"
-                  : record.status === "processing"
+              className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${record.status === "completed"
+                ? "bg-green-100 text-green-800"
+                : record.status === "processing"
                   ? "bg-yellow-100 text-yellow-800"
                   : record.status === "cancelled"
-                  ? "bg-red-100 text-red-800"
-                  : "bg-blue-100 text-blue-800"
-              }`}
+                    ? "bg-red-100 text-red-800"
+                    : "bg-blue-100 text-blue-800"
+                }`}
             >
               {record.status}
             </span>
@@ -241,7 +253,7 @@ const ManageOrders = () => {
           className={`flex-1 transition-all duration-300 p-6 md:p-10`}
         >
           {/* Header */}
-          <motion.header 
+          <motion.header
             className="margin mb-8 flex flex-col md:flex-row justify-between items-center"
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -268,7 +280,7 @@ const ManageOrders = () => {
           </motion.header>
 
           {/* Filters Section */}
-          <motion.section 
+          <motion.section
             className="margin"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -314,7 +326,7 @@ const ManageOrders = () => {
           >
             <div className="bg-white p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300">
               <h2 className="text-2xl font-semibold text-gray-800 mb-6">Order List</h2>
-              
+
               <Table
                 columns={columns}
                 dataSource={orders}
@@ -346,14 +358,11 @@ const ManageOrders = () => {
 
           {/* Error Message */}
           {error && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mt-6 p-4 bg-red-50 text-red-600 font-semibold rounded-lg shadow-md"
-            >
-              Error: {error}
+            <motion.div className="mt-6 p-4 bg-red-50 text-red-600 font-semibold rounded-lg shadow-md">
+              Error: {typeof error === 'string' ? error : error.message || 'Unknown error'}
             </motion.div>
           )}
+
         </div>
       </div>
       <ToastContainer autoClose={3000} />

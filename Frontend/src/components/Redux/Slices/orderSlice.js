@@ -7,10 +7,14 @@ export const placeOrder = createAsyncThunk(
   "order/placeOrder",
   async (orderData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(API_URL, orderData, { withCredentials: true });
+      const response = await axios.post(API_URL, orderData, {
+        withCredentials: true,
+      });
       return response.data.order || response.data.data?.order;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: "Failed to place order" });
+      return rejectWithValue(
+        error.response?.data || { message: "Failed to place order" }
+      );
     }
   }
 );
@@ -19,10 +23,15 @@ export const getAllOrders = createAsyncThunk(
   "order/getAllOrders",
   async (queryParams, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/getAll`, { params: queryParams, withCredentials: true });
+      const response = await axios.get(`${API_URL}/getAll`, {
+        params: queryParams,
+        withCredentials: true,
+      });
       return response.data.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: "Failed to fetch orders" });
+      return rejectWithValue(
+        error.response?.data || { message: "Failed to fetch orders" }
+      );
     }
   }
 );
@@ -31,10 +40,14 @@ export const getOrderById = createAsyncThunk(
   "order/getOrderById",
   async (orderId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/${orderId}`, { withCredentials: true });
+      const response = await axios.get(`${API_URL}/${orderId}`, {
+        withCredentials: true,
+      });
       return response.data.order || response.data.data?.order;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: "Order not found" });
+      return rejectWithValue(
+        error.response?.data || { message: "Order not found" }
+      );
     }
   }
 );
@@ -43,10 +56,18 @@ export const updateOrderStatus = createAsyncThunk(
   "order/updateOrderStatus",
   async ({ orderId, status }, { rejectWithValue }) => {
     try {
-      const response = await axios.patch(`${API_URL}/${orderId}`, { status }, { withCredentials: true });
-      return response.data.order || response.data.data?.order;
+      const response = await axios.patch(
+        `${API_URL}/update/${orderId}`,
+        { status },
+        { withCredentials: true }
+      );
+      console.log("Update Order Status Response:", response.data); // Debug log
+      return response.data; // Directly return response.data
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: "Failed to update order status" });
+      console.error("Update Order Status Error:", error.response?.data); // Log error
+      return rejectWithValue(
+        error.response?.data || { message: "Failed to update order status" }
+      );
     }
   }
 );
@@ -55,10 +76,16 @@ export const addToOrder = createAsyncThunk(
   "order/addToOrder",
   async ({ orderId, items }, { rejectWithValue }) => {
     try {
-      const response = await axios.patch(`${API_URL}/add/${orderId}`, { items }, { withCredentials: true });
+      const response = await axios.patch(
+        `${API_URL}/add/${orderId}`,
+        { items },
+        { withCredentials: true }
+      );
       return response.data.order || response.data.data?.order;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: "Failed to add items to order" });
+      return rejectWithValue(
+        error.response?.data || { message: "Failed to add items to order" }
+      );
     }
   }
 );
@@ -126,10 +153,18 @@ const orderSlice = createSlice({
       })
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
         state.loading = false;
-        state.order = action.payload;
-        const index = state.orders.findIndex((o) => o._id === action.payload._id);
-        if (index !== -1) {
-          state.orders[index] = action.payload;
+        if (action.payload && action.payload._id) {
+          state.order = action.payload;
+          const index = state.orders.findIndex(
+            (o) => o._id === action.payload._id
+          );
+          if (index !== -1) {
+            state.orders[index] = action.payload;
+          }
+        } else {
+          state.error = {
+            message: "Invalid or missing order data in update response",
+          };
         }
       })
       .addCase(updateOrderStatus.rejected, (state, action) => {
@@ -143,7 +178,9 @@ const orderSlice = createSlice({
       .addCase(addToOrder.fulfilled, (state, action) => {
         state.loading = false;
         state.order = action.payload;
-        const index = state.orders.findIndex((o) => o._id === action.payload._id);
+        const index = state.orders.findIndex(
+          (o) => o._id === action.payload._id
+        );
         if (index !== -1) {
           state.orders[index] = action.payload;
         }
