@@ -51,6 +51,13 @@ process.on("uncaughtException", (err) => {
 })
 
 // <------- end of uncaught ref err ------->
+app.get('/api/v1/health', (req, res) => {
+    res.json({ 
+        success: true, 
+        message: 'Server is healthy',
+        timestamp: new Date().toISOString()
+    });
+});
 
 const userRoute = require('./routes/userRoute');
 const menuRoute = require('./routes/menuRoutes');
@@ -62,7 +69,7 @@ const staffManagementRoute = require('./routes/staffManagementRoute');
 const reservationRoute = require('./routes/reservationRoute');
 
 // Middleware to parse JSON requests
-app.use(express.json());
+// app.use(express.json());
 
 app.use("/api/v1", userRoute);
 app.use("/api/v1", menuRoute);
@@ -86,9 +93,9 @@ app.use((err, req, res, next) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5069;
 const server = app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Restaurant Management System Server is running on http://localhost:${PORT}`);
 });
 
 // Unhandled promise rejection

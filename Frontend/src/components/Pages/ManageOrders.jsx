@@ -175,6 +175,72 @@ const ManageOrders = () => {
     });
   };
 
+  // const expandedRowRender = (record) => {
+  //   const columns = [
+  //     {
+  //       title: "Item Name",
+  //       dataIndex: ["menu_item", "name"],
+  //       key: "name",
+  //       render: (text) => <span className="text-gray-800">{text}</span>,
+  //     },
+  //     {
+  //       title: "Quantity",
+  //       dataIndex: "quantity",
+  //       key: "quantity",
+  //       render: (text) => <span className="font-semibold">{text}</span>,
+  //     },
+  //     {
+  //       title: "Special Instructions",
+  //       dataIndex: "specialInstructions",
+  //       key: "specialInstructions",
+  //       render: (text) => <span className="text-gray-600">{text || "None"}</span>,
+  //     },
+  //   ];
+
+  //   return (
+  //     <motion.div
+  //       initial={{ opacity: 0 }}
+  //       animate={{ opacity: 1 }}
+  //       transition={{ duration: 0.3 }}
+  //       className="p-6 bg-gray-50 rounded-xl"
+  //     >
+  //       <h3 className="text-xl font-semibold text-gray-800 mb-4">Order Details</h3>
+  //       <div className="mb-6 grid grid-cols-2 gap-4">
+  //         <p className="text-gray-600 text-lg">
+  //           <span className="font-semibold">Order Type:</span> {record.order_type.toUpperCase()}
+  //         </p>
+  //         <p className="text-gray-600 text-lg">
+  //           <span className="font-semibold">Table No:</span> {record.table_no}
+  //         </p>
+  //         <p className="text-gray-600 text-lg">
+  //           <span className="font-semibold">Order Status:</span>{" "}
+  //           <span
+  //             className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${record.status === "completed"
+  //               ? "bg-green-100 text-green-800"
+  //               : record.status === "processing"
+  //                 ? "bg-yellow-100 text-yellow-800"
+  //                 : record.status === "cancelled"
+  //                   ? "bg-red-100 text-red-800"
+  //                   : "bg-blue-100 text-blue-800"
+  //               }`}
+  //           >
+  //             {record.status}
+  //           </span>
+  //         </p>
+  //       </div>
+  //       <Table
+  //         columns={columns}
+  //         dataSource={record.items}
+  //         pagination={false}
+  //         rowKey={(item) => item.menu_item._id}
+  //         bordered
+  //         className="bg-white rounded-lg overflow-hidden shadow-md"
+  //       />
+  //     </motion.div>
+  //   );
+  // };
+
+
   const expandedRowRender = (record) => {
     const columns = [
       {
@@ -197,6 +263,12 @@ const ManageOrders = () => {
       },
     ];
 
+    // ✅ Add safety check for items array
+    const itemsWithKeys = (record.items || []).map((item, index) => ({
+      ...item,
+      uniqueKey: item._id || item.menu_item?._id || `${record._id}-${index}`,
+    }));
+
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -216,12 +288,12 @@ const ManageOrders = () => {
             <span className="font-semibold">Order Status:</span>{" "}
             <span
               className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${record.status === "completed"
-                ? "bg-green-100 text-green-800"
-                : record.status === "processing"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : record.status === "cancelled"
-                    ? "bg-red-100 text-red-800"
-                    : "bg-blue-100 text-blue-800"
+                  ? "bg-green-100 text-green-800"
+                  : record.status === "processing"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : record.status === "cancelled"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-blue-100 text-blue-800"
                 }`}
             >
               {record.status}
@@ -230,15 +302,16 @@ const ManageOrders = () => {
         </div>
         <Table
           columns={columns}
-          dataSource={record.items}
+          dataSource={itemsWithKeys}
           pagination={false}
-          rowKey={(item) => item.menu_item._id}
+          rowKey="uniqueKey" // ✅ Use the generated unique key
           bordered
           className="bg-white rounded-lg overflow-hidden shadow-md"
         />
       </motion.div>
     );
   };
+
 
   return (
     <Fragment>

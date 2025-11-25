@@ -42,6 +42,7 @@ const OrderItemsDetails = () => {
 
   // Assuming orders is a single order object for this page
   const orderItem = order;
+  console.log(orderItem)
 
   if (loading) {
     return (
