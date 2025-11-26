@@ -1,7 +1,6 @@
-/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import { FaBars, FaHome, FaTimes, FaTachometerAlt, FaShoppingCart, FaCalendarAlt, FaBox, FaCogs, FaChartBar, FaEnvelope, FaSignOutAlt, FaUsers } from "react-icons/fa";
-import { MdOutlineMenuBook,MdPayments ,MdOutlinePayments  } from "react-icons/md";
+import { MdOutlineMenuBook, MdPayments, MdOutlinePayments } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { logout, clearCookies } from "../Redux/Slices/authSlice";
@@ -14,7 +13,7 @@ import { clearAnalytics } from "../Redux/Slices/analyticsSlice";
 import { clearReservationState } from "../Redux/Slices/reservationSlice";
 import { clearMenuState } from "../Redux/Slices/menuSlice";
 import { clearStaffManagementState } from "../Redux/Slices/staffManagementSlice";
-import { motion } from "framer-motion"; // Import framer-motion
+import { motion } from "framer-motion";
 
 const navLinks = [
   { to: "/", label: "Home", icon: FaHome, permission: null },
@@ -23,9 +22,9 @@ const navLinks = [
   { to: "/manage-inventory", label: "Manage Inventory", icon: FaBox, permission: "inventory_management" },
   { to: "/manage-menu", label: "Manage Menu", icon: MdOutlineMenuBook, permission: "manage_menu" },
   { to: "/manage-staff", label: "Manage Staff", icon: FaUsers, permission: "manage_staff", role: "admin" },
-  { to: "/manage-staff-payments", label: "Manage Salary", icon: MdOutlinePayments , role: "admin" },
-  { to: "/payment-manage", label: "Payment Manage", icon: MdPayments , permission: "manage_payments" },
-  { to: "/reservations", label: "Reservations", icon: FaCalendarAlt, permission: "manage_reservations" ,role: "admin"},
+  { to: "/manage-staff-payments", label: "Manage Salary", icon: MdOutlinePayments, role: "admin" },
+  { to: "/payment-manage", label: "Payment Manage", icon: MdPayments, permission: "manage_payments" },
+  { to: "/reservations", label: "Reservations", icon: FaCalendarAlt, permission: "manage_reservations", role: "admin" },
   // { to: "/reports", label: "Report", icon: FaChartBar, permission: "view_reports" },
   { to: "/analytics", label: "Analytics", icon: FaChartBar, permission: "analytics_management" },
 
@@ -81,12 +80,28 @@ const FloatingSidebar = () => {
     const userPermissions = user.permissions || [];
     const rolePermissions = roleAccess[userRole] || [];
 
-    return navLinks.filter(({ permission, roles }) => {
-      if (!permission && !roles) return true;
-      if (userRole === "admin") return true;
-      if (roles) return roles.includes(userRole);
-      return userPermissions.includes(permission) || rolePermissions.includes(permission);
+    // return navLinks.filter(({ permission, roles }) => {
+    //   if (!permission && !roles) return true;
+    //   if (userRole === "admin") return true;
+    //   if (roles) return roles.includes(userRole);
+    //   return userPermissions.includes(permission) || rolePermissions.includes(permission);
+    // });
+
+    return navLinks.filter(({ permission, roles, role }) => {
+      if (!permission && !roles && !role) return true;
+
+      if (role) {
+        return userRole === role;
+      }
+      if (roles) {
+        return roles.includes(userRole);
+      }
+      if (permission) {
+        return userPermissions.includes(permission) || rolePermissions.includes(permission);
+      }
+      return false;
     });
+
   };
 
   const filteredNavLinks = getFilteredNavLinks();
@@ -101,7 +116,7 @@ const FloatingSidebar = () => {
     hidden: {
       opacity: 0,
       scale: 0.8,
-      x: 50, // Start slightly off to the right
+      x: 50,
       transition: { duration: 0.3, ease: "easeInOut" },
     },
     visible: {
@@ -170,9 +185,8 @@ const FloatingSidebar = () => {
                 <motion.div
                   key={label}
                   onClick={() => handleNavigation(to)}
-                  className={`flex items-center gap-3 p-3 hover:bg-indigo-600 rounded-lg cursor-pointer transition-all duration-300 ${
-                    location.pathname === to ? "bg-indigo-600" : ""
-                  }`}
+                  className={`flex items-center gap-3 p-3 hover:bg-indigo-600 rounded-lg cursor-pointer transition-all duration-300 ${location.pathname === to ? "bg-indigo-600" : ""
+                    }`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -187,9 +201,8 @@ const FloatingSidebar = () => {
               <motion.button
                 onClick={handleLogout}
                 disabled={loading}
-                className={`flex items-center gap-3 w-full p-3 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition-all duration-300 ${
-                  loading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`flex items-center gap-3 w-full p-3 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition-all duration-300 ${loading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 whileHover={{ scale: loading ? 1 : 1.02 }}
                 whileTap={{ scale: loading ? 1 : 0.98 }}
               >
